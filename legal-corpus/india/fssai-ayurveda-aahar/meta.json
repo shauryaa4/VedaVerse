@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "IN-6",
+    "jurisdiction": "india",
+    "legal_regime": "food_regulation",
+    "document_name": "Food Safety and Standards (Ayurveda Aahara) Regulations, 2022",
+    "document_type": "rule",
+    "section_or_article": "Regulation 2 (Definitions)",
+    "product_class_tags": ["nutraceutical_ayurveda_aahar"],
+    "date_enacted": "2022",
+    "last_verified_date": "2026-09-10",
+    "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
+    "status_note": null,
+    "file": "scope-definition.md"
+  },
+  {
+    "doc_id": "IN-6",
+    "jurisdiction": "india",
+    "legal_regime": "food_regulation",
+    "document_name": "Food Safety and Standards (Ayurveda Aahara) Regulations, 2022",
+    "document_type": "rule",
+    "section_or_article": "Regulation 12 (Labelling)",
+    "product_class_tags": ["nutraceutical_ayurveda_aahar"],
+    "date_enacted": "2022",
+    "last_verified_date": "2026-09-10",
+    "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
+    "status_note": null,
+    "file": "labelling-basics.md"
+  }
+]
