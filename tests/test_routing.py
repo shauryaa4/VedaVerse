@@ -144,3 +144,66 @@ def test_fallback_order_always_present():
         "jurisdiction_only_retrieval",
         "abstain",
     ]
+
+
+# --- ROUTE-03: overlapping regimes across multiple real (non-fallback) rows ---
+# Re-added after ROUTE-01 v3's regime rename (biodiversity_law -> biodiversity_abs
+# etc.) replaced the file these originally lived in. Logic unchanged, tag names updated.
+
+def test_multiple_objectives_both_touching_biodiversity_abs_stay_unrestricted():
+    """classical_generic + patentability wants biodiversity_abs unrestricted,
+    and the '*' + abs_relevance wildcard row also wants it unrestricted.
+    Both objectives requested together must not narrow each other -- confirms
+    _merge_regime_specs is safe even when both sides already agree (not just
+    the narrow-vs-unrestricted case covered by test_merge_widens_restriction...)."""
+    result = route("india", "classical_generic", ["patentability", "abs_relevance"])
+    bio = _filter_for(result, "biodiversity_abs")
+    assert bio is not None
+    assert bio.document_types is None
+    # patent_law should still be restricted to ['act'] from the patentability row --
+    # confirms the merge didn't accidentally widen a regime the second objective
+    # never touched.
+    patent = _filter_for(result, "patent_law")
+    assert patent is not None
+    assert patent.document_types == ["act"]
+    assert len(result.matched_rows) == 2
+
+
+def test_proprietary_patentability_plus_abs_relevance_keeps_patent_law_unrestricted():
+    """proprietary + patentability already wants patent_law unrestricted; adding
+    abs_relevance (which doesn't touch patent_law at all) must not restrict it."""
+    result = route("india", "proprietary", ["patentability", "abs_relevance"])
+    patent = _filter_for(result, "patent_law")
+    assert patent is not None
+    assert patent.document_types is None
+
+
+# --- ROUTE-04: legal_pathway / general have no unresolved fallback row ---
+
+def test_unresolved_legal_pathway_falls_through_to_jurisdiction_only_note():
+    """Deliberate design choice (see routing.py's _UNRESOLVED_FALLBACK_REGIME
+    docstring): legal_pathway has no narrow fallback, unlike patentability etc.
+    It must fall through to the same 'no matched_rows' path as any unmatched
+    combination, not crash and not silently invent a regime."""
+    result = route("india", "unresolved", ["legal_pathway"])
+    assert result.regime_filters == []
+    assert result.matched_rows == []
+    assert any("No routing row matched" in note for note in result.status_notes)
+
+
+def test_unresolved_general_falls_through_to_jurisdiction_only_note():
+    result = route("india", "unresolved", ["general"])
+    assert result.regime_filters == []
+    assert result.matched_rows == []
+    assert any("No routing row matched" in note for note in result.status_notes)
+
+
+def test_unresolved_mixed_objectives_only_narrows_the_ones_with_a_fallback():
+    """If unresolved fires with BOTH a fallback-covered objective (patentability)
+    and a non-covered one (general) at once, the covered one should still route
+    narrowly -- one objective having no fallback must not suppress the other."""
+    result = route("india", "unresolved", ["patentability", "general"])
+    assert _filter_for(result, "patent_law") is not None
+    assert _filter_for(result, "patent_law").document_types == ["act"]
+    # Only one matched row (from patentability); general contributed nothing.
+    assert len(result.matched_rows) == 1
