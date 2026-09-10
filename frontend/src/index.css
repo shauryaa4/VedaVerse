@@ -1,0 +1,22 @@
+:root {
+  --ink: #1B1A17;
+  --paper: #F7F4EE;
+  --turmeric: #B8842A;
+  --turmeric-dim: #8F6A22;
+  --herb: #2B4C43;
+  --herb-dark: #1E362F;
+  --border: #DDD6C7;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
