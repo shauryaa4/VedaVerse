@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "IN-7",
+    "jurisdiction": "india",
+    "legal_regime": "trademark_law",
+    "document_name": "Trade Marks Act 1999",
+    "document_type": "act",
+    "section_or_article": "Section 2(1)(zb) (definition of 'trade mark'); Section 18(1) (application for registration)",
+    "product_class_tags": ["all"],
+    "date_enacted": "1999",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.wipo.int/wipolex/en/text/128107",
+    "status_note": null,
+    "file": "registrability-basics.md"
+  },
+  {
+    "doc_id": "IN-7",
+    "jurisdiction": "india",
+    "legal_regime": "trademark_law",
+    "document_name": "Trade Marks Act 1999",
+    "document_type": "act",
+    "section_or_article": "Section 9 (Absolute grounds for refusal of registration)",
+    "product_class_tags": ["all"],
+    "date_enacted": "1999",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.wipo.int/wipolex/en/text/128107",
+    "status_note": null,
+    "file": "section-9-absolute-grounds.md"
+  }
+]

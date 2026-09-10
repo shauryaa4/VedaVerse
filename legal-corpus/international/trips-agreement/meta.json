@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "INT-1",
+    "jurisdiction": "international",
+    "legal_regime": "treaty_patent",
+    "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
+    "document_type": "treaty",
+    "section_or_article": "Article 1 (Nature and Scope of Obligations)",
+    "product_class_tags": ["all"],
+    "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.ippt.eu/legal-texts/trips/article-1",
+    "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+    "file": "article-1-general-obligations.md"
+  },
+  {
+    "doc_id": "INT-1",
+    "jurisdiction": "international",
+    "legal_regime": "treaty_patent",
+    "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
+    "document_type": "treaty",
+    "section_or_article": "Article 27 (Patentable Subject Matter)",
+    "product_class_tags": ["all"],
+    "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.ippt.eu/legal-texts/trips/article-27",
+    "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+    "file": "article-27-patentable-subject-matter.md"
+  }
+]

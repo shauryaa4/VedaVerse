@@ -16,7 +16,7 @@
     "file",
     "corpus_path"
   ],
-  "note": "Auto-aggregated from per-directory meta.json files. India: patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024, drugs-and-cosmetics-act (IN-5, new), fssai-ayurveda-aahar (IN-6, backfilled -- files existed but were missing from this manifest). Remaining: trade-marks-act-1999 (IN-7, P1) and the full international/ corpus (INT-1..INT-5) not yet built -- see corpus_validation.csv and README.md for live status.",
+  "note": "Auto-aggregated from per-directory meta.json files. India: all 7 P0/P1 docs now complete (patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024, drugs-and-cosmetics-act, fssai-ayurveda-aahar, trade-marks-act-1999). International: trips-agreement (INT-1) done; cbd, nagoya-protocol, wipo-gratk-treaty-2024, pct (INT-2..INT-5) not yet built -- see corpus_validation.csv and README.md for live status.",
   "documents": [
     {
       "doc_id": "IN-3",
@@ -262,6 +262,74 @@
       "status_note": "Files existed on disk since 2026-09-10 but were never added to this manifest -- reconciling now, no content change.",
       "file": "labelling-basics.md",
       "corpus_path": "india/fssai-ayurveda-aahar/labelling-basics.md"
+    },
+    {
+      "doc_id": "IN-7",
+      "jurisdiction": "india",
+      "legal_regime": "trademark_law",
+      "document_name": "Trade Marks Act 1999",
+      "document_type": "act",
+      "section_or_article": "Section 2(1)(zb) (definition of 'trade mark'); Section 18(1) (application for registration)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1999",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.wipo.int/wipolex/en/text/128107",
+      "status_note": null,
+      "file": "registrability-basics.md",
+      "corpus_path": "india/trade-marks-act-1999/registrability-basics.md"
+    },
+    {
+      "doc_id": "IN-7",
+      "jurisdiction": "india",
+      "legal_regime": "trademark_law",
+      "document_name": "Trade Marks Act 1999",
+      "document_type": "act",
+      "section_or_article": "Section 9 (Absolute grounds for refusal of registration)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1999",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.wipo.int/wipolex/en/text/128107",
+      "status_note": null,
+      "file": "section-9-absolute-grounds.md",
+      "corpus_path": "india/trade-marks-act-1999/section-9-absolute-grounds.md"
+    },
+    {
+      "doc_id": "INT-1",
+      "jurisdiction": "international",
+      "legal_regime": "treaty_patent",
+      "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
+      "document_type": "treaty",
+      "section_or_article": "Article 1 (Nature and Scope of Obligations)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.ippt.eu/legal-texts/trips/article-1",
+      "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+      "file": "article-1-general-obligations.md",
+      "corpus_path": "international/trips-agreement/article-1-general-obligations.md"
+    },
+    {
+      "doc_id": "INT-1",
+      "jurisdiction": "international",
+      "legal_regime": "treaty_patent",
+      "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
+      "document_type": "treaty",
+      "section_or_article": "Article 27 (Patentable Subject Matter)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.ippt.eu/legal-texts/trips/article-27",
+      "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+      "file": "article-27-patentable-subject-matter.md",
+      "corpus_path": "international/trips-agreement/article-27-patentable-subject-matter.md"
     }
   ]
 }
