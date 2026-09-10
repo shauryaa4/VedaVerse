@@ -122,12 +122,22 @@ _INTERNATIONAL_ROWS: list[tuple[str, Objective, list[RegimeSpec], str, list[str]
 ]
 
 # Fallback for CLS-01's "unresolved" category: route narrowly rather than not at all.
+#
+# ROUTE-04 DECISION (2026-09-11): "legal_pathway" and "general" are deliberately
+# NOT given a fallback row here. Both are inherently broad asks ("what's my
+# overall path", "tell me generally") -- narrowing them to one regime the way
+# patentability -> patent_law does would hide relevant law rather than help.
+# When category is "unresolved" and the objective is one of these two, route()
+# falls through to the same "no matched_rows -> jurisdiction-only retrieval"
+# path as any other unmatched combination (see the status_notes.append below).
+# Revisit with Sri/Shau if the demo needs a narrower default here.
 _UNRESOLVED_FALLBACK_REGIME: dict[str, RegimeSpec] = {
     "patentability": ("patent_law", ["act"]),
     "regulatory_category": ("drugs_cosmetics_law", None),
     "trademark": ("trademark_law", None),
     "abs_relevance": ("biodiversity_law", None),
     "prior_art": ("patent_law", ["act"]),
+    # "legal_pathway" and "general": intentionally absent, see note above.
 }
 
 
