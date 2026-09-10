@@ -10,7 +10,7 @@ Covers the edge cases the build spec explicitly calls out in section 4:
 
 import pytest
 from backend.models.classification_input import ClassificationInput, CompositionItem
-from backend.logic.classification import classify
+from backend.logic.classification import classify, apply_classification_to_pip
 
 
 def test_classical_generic_happy_path():
@@ -149,3 +149,63 @@ def test_confidence_low_when_unresolved():
     pip = ClassificationInput()
     result = classify(pip)
     assert result.confidence == "low"
+
+
+# --- CLS-06: apply_classification_to_pip() ---
+# Imports ProductIntelligenceProfile locally in these tests (not at module top)
+# to mirror the same import-order constraint the function itself works around:
+# backend.models.pip already imports Category from backend.logic.classification.
+
+def test_apply_classification_to_pip_fills_in_empty_classification():
+    from backend.models.pip import ProductIntelligenceProfile
+
+    pip = ProductIntelligenceProfile(
+        product={
+            "classical_basis": "yes",
+            "novelty": "existing",
+            "classical_reference": "Ashwagandha Churna, Sharangadhara Samhita",
+            "intended_use": "therapeutic",
+            "composition": [
+                {"ingredient": "Ashwagandha root powder", "quantity": "3", "unit": "g", "is_active": True}
+            ],
+        },
+    )
+    assert pip.classification.category is None  # confirms it starts empty
+
+    result = apply_classification_to_pip(pip)
+
+    assert result.classification.category == "classical_generic"
+    assert result.classification.confidence in ("high", "medium")
+    assert len(result.classification.reasons) >= 1
+
+
+def test_apply_classification_to_pip_returns_same_object_mutated_in_place():
+    from backend.models.pip import ProductIntelligenceProfile
+
+    pip = ProductIntelligenceProfile(product={"intended_use": "cosmetic"})
+    result = apply_classification_to_pip(pip)
+
+    assert result is pip  # same object, not a copy
+    assert pip.classification.category == "cosmetic"  # mutation visible on original reference
+
+
+def test_apply_classification_to_pip_updates_updated_at():
+    from backend.models.pip import ProductIntelligenceProfile
+
+    pip = ProductIntelligenceProfile(product={"intended_use": "cosmetic"})
+    original_updated_at = pip.updated_at
+
+    result = apply_classification_to_pip(pip)
+
+    assert result.updated_at >= original_updated_at
+
+
+def test_apply_classification_to_pip_on_empty_product_is_unresolved():
+    from backend.models.pip import ProductIntelligenceProfile
+
+    pip = ProductIntelligenceProfile()
+    result = apply_classification_to_pip(pip)
+
+    assert result.classification.category == "unresolved"
+    assert result.classification.confidence == "low"
+    assert len(result.classification.unresolved_flags) >= 1

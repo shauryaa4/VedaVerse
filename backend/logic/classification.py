@@ -9,10 +9,19 @@ Categories: classical_generic | nutraceutical_ayurveda_aahar | cosmetic |
             proprietary | new_drug | phytopharmaceutical | unresolved
 """
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from backend.models.classification_input import ClassificationInput
+
+# CLS-06: only imported for type checkers, never at runtime. pip.py imports
+# Category from THIS module at module load time, so this module importing
+# pip.py at module load time would be a circular import. apply_classification_to_pip()
+# below does the real import lazily, inside the function body, once both
+# modules are already fully loaded.
+if TYPE_CHECKING:
+    from backend.models.pip import ProductIntelligenceProfile
 
 Category = Literal[
     "classical_generic",
@@ -158,6 +167,41 @@ def classify(pip: ClassificationInput) -> ClassificationResult:
         confidence="low",
         unresolved_flags=flags,
     )
+
+
+def apply_classification_to_pip(pip: "ProductIntelligenceProfile") -> "ProductIntelligenceProfile":
+    """
+    CLS-06 — Runs classify() against pip's own product data and writes the
+    result into pip.classification IN PLACE, then returns the same pip object
+    (so callers can do either `apply_classification_to_pip(pip)` or
+    `pip = apply_classification_to_pip(pip)`).
+
+    Before this function existed, ProductIntelligenceProfile.classification
+    was created empty by PIP-01 and nothing ever filled it in — classify()
+    only ever ran against a standalone ClassificationInput in tests. RAG-03
+    needs pip.classification.category to call route(), so this is the piece
+    that makes a PIP object actually complete end-to-end.
+
+    Local imports below are required, not a style choice: backend.models.pip
+    imports Category from this module at module load time, so this module
+    cannot import backend.models.pip at module load time without a circular
+    import. Importing inside the function body works because by the time
+    this function is actually CALLED, both modules have already finished
+    loading.
+    """
+    from backend.models.pip import Classification, extract_classification_input
+
+    classification_input = extract_classification_input(pip)
+    result = classify(classification_input)
+
+    pip.classification = Classification(
+        category=result.category,
+        reasons=result.reasons,
+        confidence=result.confidence,
+        unresolved_flags=result.unresolved_flags,
+    )
+    pip.updated_at = datetime.now(timezone.utc)
+    return pip
 
 
 def _confidence(pip: ClassificationInput, category: Category) -> Confidence:

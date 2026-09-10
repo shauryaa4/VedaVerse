@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from backend.models.pip import ProductIntelligenceProfile, CompositionItem, extract_classification_input
+from backend.logic.classification import apply_classification_to_pip
 
 
 def test_full_pip_round_trips_without_data_loss():
@@ -104,3 +105,30 @@ def test_extract_classification_input_maps_fields_correctly():
     assert cls_input.composition[0].ingredient == "X"
     assert cls_input.objective == ["patentability"]
     assert cls_input.has_clinical_safety_evidence is False
+
+
+# --- CLS-06: a real PIP, fully classified and still round-trip safe ---
+
+def test_apply_classification_to_pip_then_round_trips_clean():
+    """The whole point of CLS-06 is a PIP that's complete end-to-end for RAG-03.
+    Confirm classifying it doesn't break PIP-01's own round-trip guarantee."""
+    pip = ProductIntelligenceProfile(
+        jurisdiction="india",
+        product={
+            "composition": [{"ingredient": "Ashwagandha extract", "quantity": "500", "unit": "mg", "is_active": True}],
+            "intended_use": "therapeutic",
+            "classical_basis": "partial",
+            "novelty": "modified",
+            "development_status": "prototype",
+        },
+        objective=["patentability"],
+    )
+
+    apply_classification_to_pip(pip)
+
+    dumped = pip.model_dump()
+    rehydrated = ProductIntelligenceProfile.model_validate(dumped)
+
+    assert rehydrated.classification.category == pip.classification.category
+    assert rehydrated.classification.confidence == pip.classification.confidence
+    assert rehydrated.session_id == pip.session_id
