@@ -2,10 +2,8 @@ In section 3 of the principal Act, in sub-section (2), in clause (c), for sub-cl
 the following sub-clause shall be substituted, namely:—
 “(ii) incorporated or registered in India under any law for the time being in force,
 which is controlled by a foreigner within the meaning of clause (27) of section 2 of the
-Companies Act, 2013.”.
-6. For section 4 of the principal Act, the following section shall be substituted,
-namely:—
-“4. No person or entity shall share or transfer any result of the research on any
+Companies Act, 2013.”. 6. For section 4 of the principal Act, the following section shall be substituted,
+namely:— 4. No person or entity shall share or transfer any result of the research on any
 biological resource occurring in, or obtained or accessed from, India or traditional
 knowledge associated thereto, for monetary consideration or otherwise, to a person or
 body corporate referred to in sub-section (2) of section 3, without the prior written
@@ -19,8 +17,7 @@ then, the registration with the National Biodiversity Authority shall be necessa
 Provided also that if the results of research are used for commercial utilisation or
 for obtaining any intellectual property rights, within or outside India, prior approval of
 the National Biodiversity Authority shall be required to be taken in accordance with
-the provisions of this Act.”.
-7. In section 5 of the principal Act,—
+the provisions of this Act. 7. In section 5 of the principal Act,—
 (i) in the marginal heading, for the words and figures “Sections 3 and 4”, the
 words “Certain provisions” shall be substituted;
 (ii) for sub-section (1), the following sub-section shall be substituted,
@@ -30,8 +27,7 @@ projects involving transfer or exchange of biological resource or traditional
 knowledge associated thereto between institutions, including Government
 sponsored institutions of India, and such institutions in other countries,
 if such collaborative research projects satisfy the conditions specified in
-sub-section (3).”.
-8. In section 6 of the principal Act,—
+sub-section (3).”. 8. In section 6 of the principal Act,—
 (a) for sub-section (1), the following sub-sections shall be substituted,
 namely:—
 “(1) Any person or entity covered under sub-section (2) of section 3
@@ -54,8 +50,7 @@ which is accessed from India, including those deposited in repositories
 outside India, or traditional knowledge associated thereto, shall obtain
 prior approval of the National Biodivesity Authority at the time of
 commercialisation.".
-(b) in sub-section (3), the words "enacted by the Parliament" shall be omitted.
-9. For section 7 of the principal Act, the following section shall be substituted, namely:—
+(b) in sub-section (3), the words "enacted by the Parliament" shall be omitted. 9. For section 7 of the principal Act, the following section shall be substituted, namely:—
 "7. (1) No person, other than the person covered under sub-section (2) of section 3,
 shall access any biological resource and its associated knowledge for commercial
 utilisation, without giving prior intimation to the concerned State Biodiversity Board,
