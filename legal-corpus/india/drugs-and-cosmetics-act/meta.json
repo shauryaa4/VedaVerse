@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "IN-5",
+    "jurisdiction": "india",
+    "legal_regime": "drug_regulation",
+    "document_name": "Drugs and Cosmetics Act 1940 & Drugs and Cosmetics Rules 1945 (as amended)",
+    "document_type": "act",
+    "section_or_article": "Section 3(a), Section 3(h); Rule 158B (summarized)",
+    "product_class_tags": ["classical_generic", "proprietary", "new_drug"],
+    "date_enacted": "1940 (Act); 1945 (Rules); Rule 158B inserted 2010",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+    "status_note": null,
+    "file": "drug-category-definitions.md"
+  },
+  {
+    "doc_id": "IN-5",
+    "jurisdiction": "india",
+    "legal_regime": "drug_regulation",
+    "document_name": "Drugs and Cosmetics Rules 1945 (Eighth Amendment Rules, 2015 -- Rule 2(eb)) and Rule 122E",
+    "document_type": "rule",
+    "section_or_article": "Rule 2(eb) (definition); Rule 122E (new-drug application)",
+    "product_class_tags": ["phytopharmaceutical", "new_drug"],
+    "date_enacted": "2015 (Rule 2(eb) inserted by G.S.R. 918(E), the Eighth Amendment Rules, 2015)",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+    "status_note": "Shau's task brief (and the build spec) call this the '2016 Rule amendment.' Verified operative insertion is the 2015 Eighth Amendment Rules (G.S.R. 918(E)), not 2016 -- flagged, not silently changed elsewhere.",
+    "file": "phytopharmaceutical-definition.md"
+  }
+]

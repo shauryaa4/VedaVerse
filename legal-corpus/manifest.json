@@ -16,7 +16,7 @@
     "file",
     "corpus_path"
   ],
-  "note": "Auto-aggregated from per-directory meta.json files. India-only for now (patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024). International/ and the remaining India P0 docs (Drugs & Cosmetics Act/Rules, FSSAI Ayurveda-Aahar, Trade Marks Act) are not yet built -- see corpus_validation.csv and README.md for status.",
+  "note": "Auto-aggregated from per-directory meta.json files. India: patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024, drugs-and-cosmetics-act (IN-5, new), fssai-ayurveda-aahar (IN-6, backfilled -- files existed but were missing from this manifest). Remaining: trade-marks-act-1999 (IN-7, P1) and the full international/ corpus (INT-1..INT-5) not yet built -- see corpus_validation.csv and README.md for live status.",
   "documents": [
     {
       "doc_id": "IN-3",
@@ -191,6 +191,77 @@
       "status_note": "Task doc originally referenced 'Form 26' for priority basics; verified this declaration actually appears in Form 1, not Form 26 (Form 26 is Power of Attorney). Corrected here — flagged to team.",
       "file": "form-26-priority-basics.md",
       "corpus_path": "india/patents-rules/form-26-priority-basics.md"
+    },
+    {
+      "doc_id": "IN-5",
+      "jurisdiction": "india",
+      "legal_regime": "drug_regulation",
+      "document_name": "Drugs and Cosmetics Act 1940 & Drugs and Cosmetics Rules 1945 (as amended)",
+      "document_type": "act",
+      "section_or_article": "Section 3(a), Section 3(h); Rule 158B (summarized)",
+      "product_class_tags": [
+        "classical_generic",
+        "proprietary",
+        "new_drug"
+      ],
+      "date_enacted": "1940 (Act); 1945 (Rules); Rule 158B inserted 2010",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+      "status_note": null,
+      "file": "drug-category-definitions.md",
+      "corpus_path": "india/drugs-and-cosmetics-act/drug-category-definitions.md"
+    },
+    {
+      "doc_id": "IN-5",
+      "jurisdiction": "india",
+      "legal_regime": "drug_regulation",
+      "document_name": "Drugs and Cosmetics Rules 1945 (Eighth Amendment Rules, 2015 -- Rule 2(eb)) and Rule 122E",
+      "document_type": "rule",
+      "section_or_article": "Rule 2(eb) (definition); Rule 122E (new-drug application)",
+      "product_class_tags": [
+        "phytopharmaceutical",
+        "new_drug"
+      ],
+      "date_enacted": "2015 (Rule 2(eb) inserted by G.S.R. 918(E), the Eighth Amendment Rules, 2015)",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+      "status_note": "Task brief called this the '2016 amendment'; verified actual insertion is the 2015 Eighth Amendment Rules -- flagged.",
+      "file": "phytopharmaceutical-definition.md",
+      "corpus_path": "india/drugs-and-cosmetics-act/phytopharmaceutical-definition.md"
+    },
+    {
+      "doc_id": "IN-6",
+      "jurisdiction": "india",
+      "legal_regime": "food_regulation",
+      "document_name": "Food Safety and Standards (Ayurveda Aahara) Regulations, 2022",
+      "document_type": "rule",
+      "section_or_article": "Regulation 2 (Definitions)",
+      "product_class_tags": [
+        "nutraceutical_ayurveda_aahar"
+      ],
+      "date_enacted": "2022",
+      "last_verified_date": "2026-09-10",
+      "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
+      "status_note": "Files existed on disk since 2026-09-10 but were never added to this manifest -- reconciling now, no content change.",
+      "file": "scope-definition.md",
+      "corpus_path": "india/fssai-ayurveda-aahar/scope-definition.md"
+    },
+    {
+      "doc_id": "IN-6",
+      "jurisdiction": "india",
+      "legal_regime": "food_regulation",
+      "document_name": "Food Safety and Standards (Ayurveda Aahara) Regulations, 2022",
+      "document_type": "rule",
+      "section_or_article": "Regulation 12 (Labelling)",
+      "product_class_tags": [
+        "nutraceutical_ayurveda_aahar"
+      ],
+      "date_enacted": "2022",
+      "last_verified_date": "2026-09-10",
+      "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
+      "status_note": "Files existed on disk since 2026-09-10 but were never added to this manifest -- reconciling now, no content change.",
+      "file": "labelling-basics.md",
+      "corpus_path": "india/fssai-ayurveda-aahar/labelling-basics.md"
     }
   ]
 }
