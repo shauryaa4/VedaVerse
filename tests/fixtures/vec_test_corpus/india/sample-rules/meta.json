@@ -1,0 +1,16 @@
+[
+  {
+    "doc_id": "TEST-2",
+    "jurisdiction": "india",
+    "legal_regime": "test_law",
+    "document_name": "Sample Test Rules",
+    "document_type": "rule",
+    "section_or_article": "Rule 5",
+    "product_class_tags": ["all"],
+    "date_enacted": "2005",
+    "last_verified_date": "2026-09-10",
+    "source_url": "https://example.com/test-rules",
+    "status_note": null,
+    "file": "rule-a.md"
+  }
+]
