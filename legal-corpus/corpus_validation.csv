@@ -1,1 +1,13 @@
 doc_id,document_name,jurisdiction,legal_regime,section_count,source_url_verified,last_verified_date,status_note_present,product_class_tags_complete,reviewed_by,notes
+IN-1,Patents Act 1970,india,patent_law,4,yes,2026-09-09,partial,yes,unreviewed,"3(p) 3(d) 10 and definitions(invention/inventive step) done. definitions-invention.md was cleaned of bare-act bracket artifacts on 2026-09-11. NOT YET LEGAL-REVIEWED."
+IN-2,Patents Rules 2003 (as amended incl. 2024),india,patent_law,2,yes,2026-09-10,yes,yes,unreviewed,"biological-material-disclosure + priority declaration. Team already caught/fixed a Form 26 vs Form 1 error here -- good sign, but still unreviewed by a legal mentor."
+IN-3,Biological Diversity Act 2002 (as amended by Act 10 of 2023),india,biodiversity_abs,3,yes,2026-09-11,yes,yes,unreviewed,"definitions.md was EMPTY and has been repopulated (2026-09-11). sections-3-7 and section-18 previously contained raw 2023-amendment-instrument text (not the operative law) and have been replaced with consolidated in-force text. NOT YET LEGAL-REVIEWED -- flag for mentor sign-off before demo."
+IN-4,Biological Diversity Rules 2024,india,biodiversity_abs,1,yes,2026-09-10,yes,yes,unreviewed,"ABS procedural provisions (Rules 13-20). No issues found on inspection."
+IN-5,Drugs and Cosmetics Act & Rules,india,drug_regulation,0,no,,no,no,unreviewed,"NOT STARTED. P0 per spec section 6 -- blocks New Drug / Phytopharmaceutical / Cosmetic classification routing."
+IN-6,FSSAI Ayurveda-Aahar Regulations,india,food_regulation,0,no,,no,no,unreviewed,"NOT STARTED. P0 per spec section 6 -- blocks Nutraceutical classification routing."
+IN-7,Trade Marks Act 1999,india,trademark_law,0,no,,no,no,unreviewed,"NOT STARTED. P1 per spec section 6 -- blocks the brand/logo protection path."
+INTL-1,TRIPS Agreement,international,treaty_patent,0,no,,no,no,unreviewed,"NOT STARTED. P0 -- required for the India-vs-International demo scenario."
+INTL-2,Convention on Biological Diversity,international,treaty_abs,0,no,,no,no,unreviewed,"NOT STARTED. P0."
+INTL-3,Nagoya Protocol,international,treaty_abs,0,no,,no,no,unreviewed,"NOT STARTED. P0."
+INTL-4,WIPO GRATK Treaty 2024,international,treaty_patent,0,no,,no,no,unreviewed,"NOT STARTED. P0 -- MUST carry status_note that it is adopted but not yet in force; verify ratification count before demo, it changes."
+INTL-5,PCT basics,international,treaty_patent,0,no,,no,no,unreviewed,"NOT STARTED. P1."

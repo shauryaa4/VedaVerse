@@ -1,0 +1,44 @@
+[
+  {
+    "doc_id": "IN-3",
+    "jurisdiction": "india",
+    "legal_regime": "biodiversity_abs",
+    "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+    "document_type": "act",
+    "section_or_article": "2 (Definitions)",
+    "product_class_tags": ["all"],
+    "date_enacted": "2002",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+    "status_note": "Was an empty file; repopulated -- see file for detail.",
+    "file": "definitions.md"
+  },
+  {
+    "doc_id": "IN-3",
+    "jurisdiction": "india",
+    "legal_regime": "biodiversity_abs",
+    "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+    "document_type": "act",
+    "section_or_article": "3-7 (Access and ABS obligations)",
+    "product_class_tags": ["all"],
+    "date_enacted": "2002",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+    "status_note": "Replaced amendment-instrument text with consolidated in-force text -- see file for detail.",
+    "file": "sections-3-7-access-abs.md"
+  },
+  {
+    "doc_id": "IN-3",
+    "jurisdiction": "india",
+    "legal_regime": "biodiversity_abs",
+    "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+    "document_type": "act",
+    "section_or_article": "18 (Functions and powers of NBA)",
+    "product_class_tags": ["all"],
+    "date_enacted": "2002",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+    "status_note": "Replaced amendment-instrument text with consolidated in-force text -- see file for detail.",
+    "file": "section-18-nba-functions.md"
+  }
+]

@@ -1,27 +1,28 @@
 # Legal Corpus
 
-This repository contains structured legal documents and metadata for Indian and international legal frameworks.
+This directory contains structured legal documents and metadata for Indian and international legal frameworks, per the IP-SAKTI Sahayak demo build spec (§6).
 
 ## Structure
 
 - `india/` — Indian laws, rules, and regulatory documents
-- `international/` — International treaties, protocols, and agreements
-- `manifest.json` — Corpus-level manifest
-- `corpus_validation.csv` — Validation and source-tracking information
+- `international/` — International treaties, protocols, and agreements (not yet started -- see status below)
+- `manifest.json` — Corpus-level manifest, auto-aggregated from each document directory's `meta.json`
+- `corpus_validation.csv` — Validation and source-tracking, one row per required document (built or not-yet-built)
 - `_template.meta.json` — Template for document-level metadata
 
-Each legal instrument has its own directory so that source documents, metadata, and related files can be organized consistently.
+Each legal instrument has its own directory. Every `.md` file inside a document directory carries a YAML frontmatter metadata block (doc_id, jurisdiction, legal_regime, document_name, document_type, section_or_article, product_class_tags, date_enacted, last_verified_date, source_url, status_note); each document directory also has a `meta.json` that mirrors those blocks for easy programmatic loading by the chunking/ingestion pipeline.
 
----
-doc_id: IN-1
-jurisdiction: india
-legal_regime: patent_law
-document_name: "Patents Act 1970"
-document_type: act
-section_or_article: "3(p)"
-product_class_tags: ["classical_generic", "proprietary"]
-date_enacted: "1970"
-last_verified_date: "2026-09-09"
-source_url: "<https://indiacode.gov.in/act/a49ad42b-f2dc-4ee2-9884-11ef0839798d/sections>"
-status_note: null
----
+## Status (as of 2026-09-11)
+
+| Doc | Status |
+|---|---|
+| Patents Act 1970 | Done (§3(p), §3(d), §10, definitions) |
+| Patents Rules 2003 (as amended) | Done (biological-material disclosure, priority declaration) |
+| Biological Diversity Act 2002 (as amended 2023) | Done (definitions, §§3-7, §18) |
+| Biological Diversity Rules 2024 | Done (Rules 13-20) |
+| Drugs and Cosmetics Act & Rules | **Not started** — P0 |
+| FSSAI Ayurveda-Aahar Regulations | **Not started** — P0 |
+| Trade Marks Act 1999 | **Not started** — P1 |
+| International corpus (TRIPS, CBD, Nagoya, WIPO GRATK, PCT) | **Not started** — P0/P1, see `corpus_validation.csv` |
+
+None of the above has had a legal-mentor sign-off yet — treat every file as "needs review" until someone does that pass, per the team's own risk log.

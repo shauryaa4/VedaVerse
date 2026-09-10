@@ -1,0 +1,196 @@
+{
+  "corpus_version": "0.2.0-patch",
+  "last_rebuilt": "2026-09-11",
+  "schema": [
+    "doc_id",
+    "jurisdiction",
+    "legal_regime",
+    "document_name",
+    "document_type",
+    "section_or_article",
+    "product_class_tags",
+    "date_enacted",
+    "last_verified_date",
+    "source_url",
+    "status_note",
+    "file",
+    "corpus_path"
+  ],
+  "note": "Auto-aggregated from per-directory meta.json files. India-only for now (patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024). International/ and the remaining India P0 docs (Drugs & Cosmetics Act/Rules, FSSAI Ayurveda-Aahar, Trade Marks Act) are not yet built -- see corpus_validation.csv and README.md for status.",
+  "documents": [
+    {
+      "doc_id": "IN-3",
+      "jurisdiction": "india",
+      "legal_regime": "biodiversity_abs",
+      "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+      "document_type": "act",
+      "section_or_article": "2 (Definitions)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "2002",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+      "status_note": "Was an empty file; repopulated -- see file for detail.",
+      "file": "definitions.md",
+      "corpus_path": "india/biological-diversity-act-2002/definitions.md"
+    },
+    {
+      "doc_id": "IN-3",
+      "jurisdiction": "india",
+      "legal_regime": "biodiversity_abs",
+      "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+      "document_type": "act",
+      "section_or_article": "3-7 (Access and ABS obligations)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "2002",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+      "status_note": "Replaced amendment-instrument text with consolidated in-force text -- see file for detail.",
+      "file": "sections-3-7-access-abs.md",
+      "corpus_path": "india/biological-diversity-act-2002/sections-3-7-access-abs.md"
+    },
+    {
+      "doc_id": "IN-3",
+      "jurisdiction": "india",
+      "legal_regime": "biodiversity_abs",
+      "document_name": "Biological Diversity Act 2002 (as amended by Act 10 of 2023)",
+      "document_type": "act",
+      "section_or_article": "18 (Functions and powers of NBA)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "2002",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046",
+      "status_note": "Replaced amendment-instrument text with consolidated in-force text -- see file for detail.",
+      "file": "section-18-nba-functions.md",
+      "corpus_path": "india/biological-diversity-act-2002/section-18-nba-functions.md"
+    },
+    {
+      "doc_id": "IN-4",
+      "jurisdiction": "india",
+      "legal_regime": "biodiversity_abs",
+      "document_name": "Biological Diversity Rules 2024",
+      "document_type": "rule",
+      "section_or_article": "Rules 13-20, ABS access and approval procedure",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "2024",
+      "last_verified_date": "2026-09-10",
+      "source_url": "<same URL>",
+      "status_note": null,
+      "file": "abs-procedural-provisions.md",
+      "corpus_path": "india/biological-diversity-rules-2024/abs-procedural-provisions.md"
+    },
+    {
+      "doc_id": "IN-1",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Act 1970",
+      "document_type": "act",
+      "section_or_article": "3(p)",
+      "product_class_tags": [
+        "classical_generic",
+        "proprietary"
+      ],
+      "date_enacted": "1970",
+      "last_verified_date": "2026-09-09",
+      "source_url": "https://indiacode.gov.in/act/a49ad42b-f2dc-4ee2-9884-11ef0839798d/sections",
+      "status_note": null,
+      "file": "section-3p.md",
+      "corpus_path": "india/patents-act-1970/section-3p.md"
+    },
+    {
+      "doc_id": "IN-1",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Act 1970",
+      "document_type": "act",
+      "section_or_article": "3(d)",
+      "product_class_tags": [
+        "classical_generic",
+        "proprietary"
+      ],
+      "date_enacted": "1970",
+      "last_verified_date": "2026-09-09",
+      "source_url": "https://indiacode.gov.in/act/a49ad42b-f2dc-4ee2-9884-11ef0839798d/sections",
+      "status_note": null,
+      "file": "section-3d.md",
+      "corpus_path": "india/patents-act-1970/section-3d.md"
+    },
+    {
+      "doc_id": "IN-1",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Act 1970",
+      "document_type": "act",
+      "section_or_article": "definitions (invention, inventive step)",
+      "product_class_tags": [
+        "classical_generic",
+        "proprietary"
+      ],
+      "date_enacted": "1970",
+      "last_verified_date": "2026-09-09",
+      "source_url": "https://indiacode.gov.in/act/a49ad42b-f2dc-4ee2-9884-11ef0839798d/sections",
+      "status_note": "Cleaned of bare-act amendment-bracket artifacts (e.g. '10[(j)', stray asterisks) that were present in the original file.",
+      "file": "definitions-invention.md",
+      "corpus_path": "india/patents-act-1970/definitions-invention.md"
+    },
+    {
+      "doc_id": "IN-1",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Act 1970",
+      "document_type": "act",
+      "section_or_article": "10",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1970",
+      "last_verified_date": "2026-09-09",
+      "source_url": "https://indiacode.gov.in/act/a49ad42b-f2dc-4ee2-9884-11ef0839798d/sections",
+      "status_note": null,
+      "file": "section-10.md",
+      "corpus_path": "india/patents-act-1970/section-10.md"
+    },
+    {
+      "doc_id": "IN-2",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Rules 2003 (as amended, incl. 2024 amendments)",
+      "document_type": "rule",
+      "section_or_article": "Form 1, Declaration (iii) — biological material",
+      "product_class_tags": [
+        "proprietary",
+        "new_drug"
+      ],
+      "date_enacted": "2003",
+      "last_verified_date": "2026-09-10",
+      "source_url": "https://ipindia.gov.in/storage/uploads/section-contents/8eed5956-0d87-4df4-8f54-1a54ffefc7fd.pdf",
+      "status_note": null,
+      "file": "biological-material-disclosure.md",
+      "corpus_path": "india/patents-rules/biological-material-disclosure.md"
+    },
+    {
+      "doc_id": "IN-2",
+      "jurisdiction": "india",
+      "legal_regime": "patent_law",
+      "document_name": "Patents Rules 2003 (as amended, incl. 2024 amendments)",
+      "document_type": "rule",
+      "section_or_article": "Form 1, Declaration (iii) — priority claim",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "2003",
+      "last_verified_date": "2026-09-10",
+      "source_url": "https://ipindia.gov.in/storage/uploads/section-contents/8eed5956-0d87-4df4-8f54-1a54ffefc7fd.pdf",
+      "status_note": "Task doc originally referenced 'Form 26' for priority basics; verified this declaration actually appears in Form 1, not Form 26 (Form 26 is Power of Attorney). Corrected here — flagged to team.",
+      "file": "form-26-priority-basics.md",
+      "corpus_path": "india/patents-rules/form-26-priority-basics.md"
+    }
+  ]
+}
