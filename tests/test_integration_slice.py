@@ -33,7 +33,7 @@ def test_full_slice_ashwagandha_shatavari_example():
 
     routing = route(pip.jurisdiction, result.category, pip.objective)
     assert "patent_law" in routing.legal_regimes
-    assert "biodiversity_law" in routing.legal_regimes
+    assert "biodiversity_abs" in routing.legal_regimes
     # Proprietary's patent_law filter must be unrestricted (includes Patents Rules,
     # which the real corpus tags as legal_regime="patent_law", document_type="rule")
     patent_filter = next(f for f in routing.regime_filters if f.legal_regime == "patent_law")

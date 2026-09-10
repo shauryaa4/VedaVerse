@@ -4,18 +4,32 @@ ROUTE-01 — Deterministic routing engine.
 Implements build spec section 5:
     (jurisdiction, classification.category, objective[]) -> corpus_filter
 
-v2 CHANGE — why this file looks different from the first version:
-The first version invented separate legal_regime tags for an Act vs its
-Rules (e.g. "patent_law" vs "patent_rules"). The actual corpus doesn't tag
-things that way — Shau's Patents Rules metadata uses legal_regime="patent_law"
-(same as the Patents Act), distinguished only by document_type: "act" | "rule".
-Rather than ask corpus work to be retagged, this version matches the corpus's
-actual convention: one legal_regime per act-family, optionally narrowed by
-document_type where the build spec explicitly wants only the Act and not its
-Rules (or vice versa). See _INDIA_ROWS below — most rows don't restrict
-document_type at all (None = match any type in that regime).
+v3 CHANGE — this is a real correctness fix, not a style change:
+Shau's corpus task doc (section 1) FREEZES the exact legal_regime vocabulary
+every corpus document is tagged with: patent_law, biodiversity_abs,
+food_regulation, trademark_law, treaty_patent, treaty_abs. v2 of this file
+used regime names invented independently of that schema (biodiversity_law,
+drugs_cosmetics_law, fssai_ayurveda_aahar, separate "trips"/"pct" and
+"cbd"/"nagoya_protocol" tags) — those never matched anything in the real
+corpus and would have silently returned zero results for almost every route
+except patent_law/trademark_law, which happened to match by coincidence.
+Confirmed by checking IN-4's actual committed frontmatter: legal_regime is
+"biodiversity_abs", not "biodiversity_law".
 
-DELIBERATE DESIGN CHOICE, unchanged from v1:
+Corrected mapping used below:
+  - biodiversity_law        -> biodiversity_abs
+  - drugs_cosmetics_law     -> drug_regulation      (per Shau's D&C Act task, §1)
+  - fssai_ayurveda_aahar    -> food_regulation       (per Shau's FSSAI task, §1)
+  - "trips" + "pct" (two tags) -> treaty_patent (one shared tag, both docs)
+  - "cbd" + "nagoya_protocol" (two tags) -> treaty_abs (one shared tag, both docs)
+  - wipo_gratk: KEPT AS ITS OWN TAG. Shau's schema examples aren't exhaustive
+    ("e.g. ...") and don't explicitly cover GRATK. Since GRATK is uniquely
+    status-flagged everywhere else in the build spec (never bundled generically
+    with other treaties) and hasn't been created yet, this is a clean choice
+    made now rather than a retrofit — confirm with Shau when she reaches INT-4
+    that she tags it legal_regime: wipo_gratk, not treaty_patent/treaty_abs.
+
+DELIBERATE DESIGN CHOICE, unchanged since v1:
 This module knows NOTHING about whether a regime's documents actually have
 real content yet. Per spec section 5, "no chunks found -> fall back to
 jurisdiction-only retrieval -> abstain" is the RETRIEVER's job, not routing's.
@@ -70,27 +84,27 @@ class RoutingResult(BaseModel):
 # "*" as category means the row applies regardless of classification category.
 _INDIA_ROWS: list[tuple[str, Objective, list[RegimeSpec], str]] = [
     ("classical_generic", "patentability",
-     [("patent_law", ["act"]), ("biodiversity_law", None)],
+     [("patent_law", ["act"]), ("biodiversity_abs", None)],
      "India + Classical/Generic + patentability -> Patents Act s.3(p) ONLY (not Rules), Biological Diversity Act, TKDL mock"),
 
     ("proprietary", "patentability",
-     [("patent_law", None), ("biodiversity_law", None)],
+     [("patent_law", None), ("biodiversity_abs", None)],
      "India + Proprietary + patentability -> Patents Act (novelty/inventive step) + Patents Rules (both under patent_law), BDA (ABS)"),
 
     ("new_drug", "regulatory_category",
-     [("drugs_cosmetics_law", None)],
+     [("drug_regulation", None)],
      "India + New Drug + regulatory_category -> Drugs and Cosmetics Act/Rules (both, no restriction)"),
 
     ("phytopharmaceutical", "regulatory_category",
-     [("drugs_cosmetics_law", None)],
+     [("drug_regulation", None)],
      "India + Phytopharmaceutical + regulatory_category -> D&C Act + Rules (phytopharma definition) (both, no restriction)"),
 
     ("nutraceutical_ayurveda_aahar", "regulatory_category",
-     [("fssai_ayurveda_aahar", None)],
+     [("food_regulation", None)],
      "India + Nutraceutical + regulatory_category -> FSSAI Ayurveda-Aahar regulations"),
 
     ("cosmetic", "regulatory_category",
-     [("drugs_cosmetics_law", ["act"])],
+     [("drug_regulation", ["act"])],
      "India + Cosmetic + regulatory_category -> Drugs and Cosmetics Act ONLY (spec explicitly says Act, not Rules, for this row)"),
 
     ("*", "trademark",
@@ -98,20 +112,20 @@ _INDIA_ROWS: list[tuple[str, Objective, list[RegimeSpec], str]] = [
      "India + * + trademark -> Trade Marks Act"),
 
     ("*", "abs_relevance",
-     [("biodiversity_law", None)],
+     [("biodiversity_abs", None)],
      "India + * + abs_relevance -> Biological Diversity Act + Rules 2024 (both, no restriction)"),
 ]
 
 # --- International rows: category is always "*" per build spec section 5 ---
 _INTERNATIONAL_ROWS: list[tuple[str, Objective, list[RegimeSpec], str, list[str]]] = [
     ("*", "patentability",
-     [("trips", None), ("pct", None)],
-     "International + * + patentability -> TRIPS Art.27, PCT basics",
+     [("treaty_patent", None)],
+     "International + * + patentability -> TRIPS Art.27, PCT basics (both tagged treaty_patent)",
      []),
 
     ("*", "abs_relevance",
-     [("cbd", None), ("nagoya_protocol", None), ("wipo_gratk", None)],
-     "International + * + abs_relevance -> CBD Art.15, Nagoya Protocol, WIPO GRATK",
+     [("treaty_abs", None), ("wipo_gratk", None)],
+     "International + * + abs_relevance -> CBD Art.15 + Nagoya Protocol (treaty_abs), WIPO GRATK",
      ["WIPO GRATK Treaty adopted 24 May 2024 but NOT YET IN FORCE (needs 15 ratifications/accessions) — "
       "must be displayed to the user as such, not cited as binding law."]),
 
@@ -122,22 +136,12 @@ _INTERNATIONAL_ROWS: list[tuple[str, Objective, list[RegimeSpec], str, list[str]
 ]
 
 # Fallback for CLS-01's "unresolved" category: route narrowly rather than not at all.
-#
-# ROUTE-04 DECISION (2026-09-11): "legal_pathway" and "general" are deliberately
-# NOT given a fallback row here. Both are inherently broad asks ("what's my
-# overall path", "tell me generally") -- narrowing them to one regime the way
-# patentability -> patent_law does would hide relevant law rather than help.
-# When category is "unresolved" and the objective is one of these two, route()
-# falls through to the same "no matched_rows -> jurisdiction-only retrieval"
-# path as any other unmatched combination (see the status_notes.append below).
-# Revisit with Sri/Shau if the demo needs a narrower default here.
 _UNRESOLVED_FALLBACK_REGIME: dict[str, RegimeSpec] = {
     "patentability": ("patent_law", ["act"]),
-    "regulatory_category": ("drugs_cosmetics_law", None),
+    "regulatory_category": ("drug_regulation", None),
     "trademark": ("trademark_law", None),
-    "abs_relevance": ("biodiversity_law", None),
+    "abs_relevance": ("biodiversity_abs", None),
     "prior_art": ("patent_law", ["act"]),
-    # "legal_pathway" and "general": intentionally absent, see note above.
 }
 
 

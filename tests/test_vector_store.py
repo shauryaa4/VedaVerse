@@ -50,13 +50,13 @@ def test_where_clause_multiple_regimes_becomes_or():
         jurisdiction="india",
         regime_filters=[
             RegimeFilter(legal_regime="patent_law", document_types=None),
-            RegimeFilter(legal_regime="biodiversity_law", document_types=None),
+            RegimeFilter(legal_regime="biodiversity_abs", document_types=None),
         ],
-        legal_regimes=["patent_law", "biodiversity_law"],
+        legal_regimes=["patent_law", "biodiversity_abs"],
         matched_rows=["test"],
     )
     where = build_where_clause(routing)
-    assert where["$and"][1] == {"$or": [{"legal_regime": "patent_law"}, {"legal_regime": "biodiversity_law"}]}
+    assert where["$and"][1] == {"$or": [{"legal_regime": "patent_law"}, {"legal_regime": "biodiversity_abs"}]}
 
 
 def test_where_clause_no_regime_filters_falls_back_to_jurisdiction_only():
