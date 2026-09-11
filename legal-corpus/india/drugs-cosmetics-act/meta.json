@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "IN-5",
+    "jurisdiction": "india",
+    "legal_regime": "drug_regulation",
+    "document_name": "Drugs and Cosmetics Act 1940",
+    "document_type": "act",
+    "section_or_article": "3(a), 3(b), 3(h) - definitions",
+    "product_class_tags": ["classical_generic", "proprietary", "new_drug", "cosmetic"],
+    "date_enacted": "1940",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://cdsco.gov.in/opencms/opencms/en/Acts-Rules/",
+    "status_note": "New -- see file for detail.",
+    "file": "definitions.md"
+  },
+  {
+    "doc_id": "IN-5",
+    "jurisdiction": "india",
+    "legal_regime": "drug_regulation",
+    "document_name": "Drugs and Cosmetics Rules 1945 (Eighth Amendment Rules 2015 / Rule 122E)",
+    "document_type": "rule",
+    "section_or_article": "Rule 2(eb) - phytopharmaceutical drug; Rule 122E - new drug",
+    "product_class_tags": ["phytopharmaceutical", "new_drug"],
+    "date_enacted": "1945",
+    "last_verified_date": "2026-09-11",
+    "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/New-Drugs/FAQs/New_Drugs_FAQs.doc",
+    "status_note": "New -- see file for detail.",
+    "file": "phytopharmaceutical-new-drug.md"
+  }
+]
