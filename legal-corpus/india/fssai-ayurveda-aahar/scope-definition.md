@@ -9,7 +9,7 @@ product_class_tags: ["nutraceutical_ayurveda_aahar"]
 date_enacted: "2022"
 last_verified_date: "2026-09-10"
 source_url: "https://fssai.gov.in/docs/food-law/regulations/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf"
-status_note: null
+status_note: "Not yet legal-mentor reviewed, consistent with the rest of the corpus."
 ---
 
 “Ayurveda Aahara” means a food prepared in accordance with the recipes or ingredients or

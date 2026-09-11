@@ -1,5 +1,5 @@
 ---
-doc_id: INT-1
+doc_id: INTL-1
 jurisdiction: international
 legal_regime: treaty_patent
 document_name: "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)"

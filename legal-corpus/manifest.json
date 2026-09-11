@@ -1,5 +1,5 @@
 {
-  "corpus_version": "0.3.0",
+  "corpus_version": "0.4.0",
   "last_rebuilt": "2026-09-11",
   "schema": [
     "doc_id",
@@ -16,7 +16,7 @@
     "file",
     "corpus_path"
   ],
-  "note": "Auto-aggregated from per-directory meta.json files. Covers all India P0/P1 docs (patents-act-1970, patents-rules, biological-diversity-act-2002, biological-diversity-rules-2024, drugs-cosmetics-act, fssai-ayurveda-aahar, trade-marks-act-1999) and the full International P0/P1 set (trips, cbd, nagoya-protocol, wipo-gratk, pct). Nothing in this corpus has had a legal-mentor review pass yet -- see corpus_validation.csv 'reviewed_by' column and each file's status_note.",
+  "note": "Auto-aggregated from per-directory meta.json files. This rebuild follows a dedup pass: two teammates independently built Drugs & Cosmetics Act content (india/drugs-cosmetics-act/ vs india/drugs-and-cosmetics-act/) and TRIPS content (international/trips/ vs international/trips-agreement/) in parallel. The older/thinner copy of each was removed in favor of the newer/more thorough one; the surviving TRIPS doc's doc_id was corrected from the ad hoc 'INT-1' to the corpus-standard 'INTL-1'. Two empty placeholder directories from a failed scaffold (a literal '{trips,cbd,nagoya-protocol,wipo-gratk,pct}' folder and an empty 'international/wipo-gratk-treaty/') were also removed. Nothing in this corpus has had a legal-mentor review pass yet -- see corpus_validation.csv 'reviewed_by' column and each file's status_note.",
   "documents": [
     {
       "doc_id": "IN-3",
@@ -90,39 +90,38 @@
       "doc_id": "IN-5",
       "jurisdiction": "india",
       "legal_regime": "drug_regulation",
-      "document_name": "Drugs and Cosmetics Act 1940",
+      "document_name": "Drugs and Cosmetics Act 1940 & Drugs and Cosmetics Rules 1945 (as amended)",
       "document_type": "act",
-      "section_or_article": "3(a), 3(b), 3(h) - definitions",
+      "section_or_article": "Section 3(a), Section 3(h); Rule 158B (summarized)",
       "product_class_tags": [
         "classical_generic",
         "proprietary",
-        "new_drug",
-        "cosmetic"
+        "new_drug"
       ],
-      "date_enacted": "1940",
+      "date_enacted": "1940 (Act); 1945 (Rules); Rule 158B inserted 2010",
       "last_verified_date": "2026-09-11",
-      "source_url": "https://cdsco.gov.in/opencms/opencms/en/Acts-Rules/",
-      "status_note": "New -- see file for detail.",
-      "file": "definitions.md",
-      "corpus_path": "india/drugs-cosmetics-act/definitions.md"
+      "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+      "status_note": null,
+      "file": "drug-category-definitions.md",
+      "corpus_path": "india/drugs-and-cosmetics-act/drug-category-definitions.md"
     },
     {
       "doc_id": "IN-5",
       "jurisdiction": "india",
       "legal_regime": "drug_regulation",
-      "document_name": "Drugs and Cosmetics Rules 1945 (Eighth Amendment Rules 2015 / Rule 122E)",
+      "document_name": "Drugs and Cosmetics Rules 1945 (Eighth Amendment Rules, 2015 -- Rule 2(eb)) and Rule 122E",
       "document_type": "rule",
-      "section_or_article": "Rule 2(eb) - phytopharmaceutical drug; Rule 122E - new drug",
+      "section_or_article": "Rule 2(eb) (definition); Rule 122E (new-drug application)",
       "product_class_tags": [
         "phytopharmaceutical",
         "new_drug"
       ],
-      "date_enacted": "1945",
+      "date_enacted": "2015 (Rule 2(eb) inserted by G.S.R. 918(E), the Eighth Amendment Rules, 2015)",
       "last_verified_date": "2026-09-11",
-      "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/New-Drugs/FAQs/New_Drugs_FAQs.doc",
-      "status_note": "New -- see file for detail.",
-      "file": "phytopharmaceutical-new-drug.md",
-      "corpus_path": "india/drugs-cosmetics-act/phytopharmaceutical-new-drug.md"
+      "source_url": "https://cdsco.gov.in/opencms/export/sites/CDSCO_WEB/Pdf-documents/acts_rules/2016DrugsandCosmeticsAct1940Rules1945.pdf",
+      "status_note": "Shau's task brief (and the build spec) call this the '2016 Rule amendment.' Verified operative insertion is the 2015 Eighth Amendment Rules (G.S.R. 918(E)), not 2016 -- flagged, not silently changed elsewhere.",
+      "file": "phytopharmaceutical-definition.md",
+      "corpus_path": "india/drugs-and-cosmetics-act/phytopharmaceutical-definition.md"
     },
     {
       "doc_id": "IN-6",
@@ -137,7 +136,7 @@
       "date_enacted": "2022",
       "last_verified_date": "2026-09-10",
       "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
-      "status_note": null,
+      "status_note": "Not yet legal-mentor reviewed, consistent with the rest of the corpus.",
       "file": "scope-definition.md",
       "corpus_path": "india/fssai-ayurveda-aahar/scope-definition.md"
     },
@@ -154,7 +153,7 @@
       "date_enacted": "2022",
       "last_verified_date": "2026-09-10",
       "source_url": "https://fssai.gov.in/upload/notifications/2022/05/62789a20b54bdGazette_Notification_Ayurveda_Aahara_09_05_2022.pdf",
-      "status_note": null,
+      "status_note": "Not yet legal-mentor reviewed, consistent with the rest of the corpus.",
       "file": "labelling-basics.md",
       "corpus_path": "india/fssai-ayurveda-aahar/labelling-basics.md"
     },
@@ -282,6 +281,23 @@
       "corpus_path": "india/trade-marks-act-1999/section-9-absolute-grounds.md"
     },
     {
+      "doc_id": "IN-7",
+      "jurisdiction": "india",
+      "legal_regime": "trademark_law",
+      "document_name": "Trade Marks Act 1999",
+      "document_type": "act",
+      "section_or_article": "Section 2(1)(zb) (definition of 'trade mark'); Section 18(1) (application for registration)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1999",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.wipo.int/wipolex/en/text/128107",
+      "status_note": "Added alongside section-9-absolute-grounds.md -- was missing from this meta.json before this cleanup pass.",
+      "file": "registrability-basics.md",
+      "corpus_path": "india/trade-marks-act-1999/registrability-basics.md"
+    },
+    {
       "doc_id": "INTL-2",
       "jurisdiction": "international",
       "legal_regime": "treaty_abs",
@@ -338,16 +354,33 @@
       "legal_regime": "treaty_patent",
       "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
       "document_type": "treaty",
-      "section_or_article": "Article 27 (Patentable Subject Matter); Article 1 (Nature and Scope of Obligations)",
+      "section_or_article": "Article 1 (Nature and Scope of Obligations)",
       "product_class_tags": [
         "all"
       ],
-      "date_enacted": "1994",
+      "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
       "last_verified_date": "2026-09-11",
-      "source_url": "https://www.wto.org/english/docs_e/legal_e/27-trips.pdf",
-      "status_note": null,
-      "file": "article-1-and-27.md",
-      "corpus_path": "international/trips/article-1-and-27.md"
+      "source_url": "https://www.ippt.eu/legal-texts/trips/article-1",
+      "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+      "file": "article-1-general-obligations.md",
+      "corpus_path": "international/trips-agreement/article-1-general-obligations.md"
+    },
+    {
+      "doc_id": "INTL-1",
+      "jurisdiction": "international",
+      "legal_regime": "treaty_patent",
+      "document_name": "Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS)",
+      "document_type": "treaty",
+      "section_or_article": "Article 27 (Patentable Subject Matter)",
+      "product_class_tags": [
+        "all"
+      ],
+      "date_enacted": "1994 (signed 15 April 1994, Marrakesh; effective 1 January 1995)",
+      "last_verified_date": "2026-09-11",
+      "source_url": "https://www.ippt.eu/legal-texts/trips/article-27",
+      "status_note": "Verified against IP-PorTal's TRIPS mirror; WTO.org itself not directly fetchable this session -- recommend spot-check.",
+      "file": "article-27-patentable-subject-matter.md",
+      "corpus_path": "international/trips-agreement/article-27-patentable-subject-matter.md"
     },
     {
       "doc_id": "INTL-4",
