@@ -51,12 +51,12 @@ def _get_client() -> "genai.Client":
 
 
 class RetrievedChunkRef(BaseModel):
-    chunk_id: str          # matches Chunk.chunk_id from chunking.py, e.g. "IN-1:3(p)"
-    text: str               # full chunk text, not truncated — CITE needs to diff against it
+    chunk_id: str
+    text: str
     source_url: str | None
     doc_id: str | None
+    document_name: str | None = None
     section_or_article: str | None
-
 
 class RagResponse(BaseModel):
     answer_text: str                       # the generated answer, unverified
@@ -114,6 +114,7 @@ def _results_to_chunk_refs(results: dict) -> list[RetrievedChunkRef]:
             text=text,
             source_url=meta.get("source_url") or None,
             doc_id=meta.get("doc_id") or None,
+            document_name=meta.get("document_name") or None,
             section_or_article=meta.get("section_or_article") or None,
         ))
     return refs
