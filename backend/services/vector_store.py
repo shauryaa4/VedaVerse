@@ -52,6 +52,10 @@ def _chunk_to_chroma_metadata(chunk: Chunk) -> dict:
         "product_class_tags_csv": ",".join(chunk.product_class_tags),
         "metadata_source": chunk.metadata_source,
         "status_note": chunk.status_note or "",
+        # RAG-03 needs this to build citable RetrievedChunkRef objects — without
+        # it, every retrieved chunk would come back with source_url=None and
+        # nothing downstream (CITE, the UI) could link back to the actual law.
+        "source_url": chunk.source_url or "",
     }
 
 

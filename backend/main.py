@@ -9,6 +9,8 @@ check only. Session/intake/classify/query endpoints are separate tasks
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.routes.query import router as query_router
+
 app = FastAPI(title="IP-SAKTI Sahayak API", version="0.1.0")
 
 # Wide-open CORS for local dev only. Tighten before any real deployment (API-05).
@@ -18,6 +20,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(query_router)
 
 
 @app.get("/health")
