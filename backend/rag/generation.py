@@ -65,6 +65,7 @@ class RagResponse(BaseModel):
     retrieval_where_clause: dict | None     # what build_where_clause() produced, for debugging
     abstained: bool = False                 # True if no relevant chunks were found
     abstain_reason: str | None = None
+    status_notes: list[str] = []
 
 
 def _build_prompt(question: str, chunks: list[RetrievedChunkRef], language: str = "en") -> str:
@@ -187,6 +188,7 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
                 "to jurisdiction-only retrieval or escalate to a human reviewer "
                 "rather than answer without grounding."
             ),
+            status_notes=routing.status_notes,
         )
 
     prompt = _build_prompt(question, used_chunks, language=pip.language)
@@ -199,4 +201,5 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
         used_chunks=used_chunks,
         retrieval_where_clause=where,
         abstained=False,
+        status_notes=routing.status_notes,
     )

@@ -15,12 +15,14 @@ from pydantic import BaseModel
 from backend.models.pip import ProductIntelligenceProfile
 from backend.rag.generation import RagResponse, answer_query
 from backend.logic.citation_verification import (
+    calculate_support_score,
     classify_citation_support,
     extract_claim_citation_pairs,
     get_chunk_text,
     score_overlap,
     strip_unsupported_sentences,
 )
+from backend.rag.confidence import evaluate_confidence
 from backend.services.citation_cache import store_citation
 from backend.services.pip_session_store import get_session
 from backend.services.vector_store import get_client, get_or_create_collection
@@ -138,19 +140,23 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
                 result,
             )
 
-            filtered_answer, should_abstain = strip_unsupported_sentences(
+            filtered_answer, citation_forced_abstain = strip_unsupported_sentences(
                 result.answer_text,
                 classifications,
             )
 
             result.answer_text = filtered_answer
 
-            if should_abstain:
-                result.abstained = True
-                result.abstain_reason = (
-                    "The generated answer did not contain enough citation-supported "
-                    "content to return safely."
-                )
+            # CONF-01->05: combine classification confidence + citation
+            # support + routing status_notes into the final answer/hedge/
+            # abstain decision.
+            citation_support_score = calculate_support_score(classifications)
+            result = evaluate_confidence(
+                pip.classification.confidence,
+                citation_support_score,
+                citation_forced_abstain,
+                result,
+           )
 
         # API-04: log every query for post-demo debugging. Never let a
         # logging failure break the actual response the user is waiting on.
