@@ -56,6 +56,12 @@ def _chunk_to_chroma_metadata(chunk: Chunk) -> dict:
         # it, every retrieved chunk would come back with source_url=None and
         # nothing downstream (CITE, the UI) could link back to the actual law.
         "source_url": chunk.source_url or "",
+        # Without this, routes/query.py's citation caching always falls back
+        # to doc_id ("IN-3") instead of a real name ("Biological Diversity
+        # Act 2002") -- a real, user-visible citation quality bug found by
+        # inspecting what was actually stored vs. what Chunk/RetrievedChunkRef
+        # both already expect to have.
+        "document_name": chunk.document_name or "",
     }
 
 
