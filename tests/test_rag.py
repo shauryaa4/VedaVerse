@@ -69,6 +69,50 @@ def test_build_prompt_tells_model_not_to_invent_law():
     assert "do not invent" in prompt.lower() or "only" in prompt.lower()
 
 
+def test_build_prompt_groups_chunks_by_regime():
+    """RAG-05: a query returning both patent_law and biodiversity_abs chunks
+    must show them under separate, clearly labeled sections -- not flattened
+    together as if they were one legal domain."""
+    chunks = [
+        RetrievedChunkRef(
+            chunk_id="IN-1:3(p)", text="TK cannot be patented.",
+            source_url=None, doc_id="IN-1", section_or_article="3(p)",
+            legal_regime="patent_law",
+        ),
+        RetrievedChunkRef(
+            chunk_id="IN-3:3-7", text="ABS approval is required for biological resources.",
+            source_url=None, doc_id="IN-3", section_or_article="3-7",
+            legal_regime="biodiversity_abs",
+        ),
+    ]
+    prompt = _build_prompt("Can I patent this?", chunks)
+
+    assert "patent_law" in prompt
+    assert "biodiversity_abs" in prompt
+    # The patent_law heading must appear before its own chunk text, and the
+    # biodiversity_abs heading before ITS chunk text -- proving they're in
+    # separate labeled sections, not just both mentioned somewhere.
+    patent_idx = prompt.index("patent_law")
+    tk_text_idx = prompt.index("TK cannot be patented.")
+    bio_idx = prompt.index("biodiversity_abs")
+    abs_text_idx = prompt.index("ABS approval is required")
+    assert patent_idx < tk_text_idx
+    assert bio_idx < abs_text_idx
+
+
+def test_build_prompt_single_regime_still_works():
+    """Not a regression from the grouping change -- a single-regime result
+    (the common case) should still produce a normal, readable prompt."""
+    chunks = [RetrievedChunkRef(
+        chunk_id="IN-1:3(p)", text="TK cannot be patented.",
+        source_url=None, doc_id="IN-1", section_or_article="3(p)",
+        legal_regime="patent_law",
+    )]
+    prompt = _build_prompt("question", chunks)
+    assert "TK cannot be patented." in prompt
+    assert prompt.count("patent_law") == 1  # one heading, not duplicated
+
+
 # --- answer_query(): the full chain, LLM and retrieval both mocked ---
 
 def _classical_pip():
@@ -167,3 +211,37 @@ def test_answer_query_passes_where_clause_through_for_debugging(monkeypatch):
 
     assert result.retrieval_where_clause is not None
     assert result.retrieval_where_clause.get("$and") is not None
+
+
+# --- RAG-06: language handling ---
+
+def test_build_prompt_defaults_to_english():
+    prompt = _build_prompt("question", [])
+    assert "Write your answer in English." in prompt
+    assert "Hindi" not in prompt
+
+
+def test_build_prompt_switches_to_hindi():
+    prompt = _build_prompt("question", [], language="hi")
+    assert "Hindi" in prompt
+    assert "do not translate" in prompt.lower() or "citation" in prompt.lower()
+
+
+def test_answer_query_passes_pip_language_to_prompt(monkeypatch):
+    """Confirms the wiring end-to-end: pip.language actually reaches the
+    prompt sent to the LLM, not just that _build_prompt itself works."""
+    fake_results = _fake_chroma_results(
+        ["IN-1:3(p)"], ["text"], [{"doc_id": "IN-1", "section_or_article": "3(p)", "source_url": ""}],
+    )
+    monkeypatch.setattr(generation, "vector_query", lambda *a, **kw: fake_results)
+    fake_client = MagicMock()
+    fake_client.models.generate_content.return_value = MagicMock(text="uttar")
+    monkeypatch.setattr(generation, "_get_client", lambda: fake_client)
+
+    pip = _classical_pip()
+    pip.language = "hi"
+
+    answer_query(pip, "question", collection=None)
+
+    call_kwargs = fake_client.models.generate_content.call_args.kwargs
+    assert "Hindi" in call_kwargs["contents"]

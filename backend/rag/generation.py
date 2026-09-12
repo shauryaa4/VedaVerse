@@ -57,6 +57,7 @@ class RetrievedChunkRef(BaseModel):
     doc_id: str | None
     document_name: str | None = None
     section_or_article: str | None
+    legal_regime: str | None = None  # RAG-05: needed to group chunks by regime in the prompt
 
 class RagResponse(BaseModel):
     answer_text: str                       # the generated answer, unverified
@@ -66,18 +67,49 @@ class RagResponse(BaseModel):
     abstain_reason: str | None = None
 
 
-def _build_prompt(question: str, chunks: list[RetrievedChunkRef]) -> str:
+def _build_prompt(question: str, chunks: list[RetrievedChunkRef], language: str = "en") -> str:
     """
     Deliberately blunt instructions, repeated: this is a legal-answers tool,
     so 'don't invent law' matters more than a nicely-worded prompt. Each
     chunk gets a bracketed label matching its chunk_id so the model can (and
     is told to) cite inline — CITE-01->08 later checks whether it actually did.
+
+    RAG-05: chunks are grouped by legal_regime (not just listed flat) and each
+    group gets an explicit heading. A single query commonly returns chunks
+    from two different regimes at once (e.g. patent_law + biodiversity_abs
+    for most classical_generic/proprietary patentability questions -- see
+    routing.py's _INDIA_ROWS). Without a clear boundary between them, the
+    model can blend a patent-law concept with a biodiversity-law concept in
+    one sentence without realizing they're from unrelated legal domains.
     """
-    context_blocks = []
+    by_regime: dict[str, list[RetrievedChunkRef]] = {}
     for c in chunks:
-        label = f"[{c.doc_id or '?'}:{c.section_or_article or '?'}]"
-        context_blocks.append(f"{label}\n{c.text}")
-    context = "\n\n---\n\n".join(context_blocks)
+        regime = c.legal_regime or "unspecified regime"
+        by_regime.setdefault(regime, []).append(c)
+
+    regime_blocks = []
+    for regime, regime_chunks in by_regime.items():
+        chunk_texts = []
+        for c in regime_chunks:
+            label = f"[{c.doc_id or '?'}:{c.section_or_article or '?'}]"
+            chunk_texts.append(f"{label}\n{c.text}")
+        regime_blocks.append(
+            f"--- LEGAL AREA: {regime} ---\n" + "\n\n".join(chunk_texts)
+        )
+    context = "\n\n".join(regime_blocks)
+
+    # RAG-06: language instruction is a separate line, not baked into the
+    # main instructions, so it's easy to see/change and doesn't get lost
+    # among the "don't invent law" rules that matter more.
+    if language == "hi":
+        language_instruction = (
+            "Write your answer in Hindi (Devanagari script). Keep the bracketed "
+            "citation labels exactly as given (e.g. [IN-1:3(p)]) -- do not "
+            "translate or alter them, since they must match the source chunk IDs "
+            "exactly for citation verification."
+        )
+    else:
+        language_instruction = "Write your answer in English."
 
     return f"""You are a legal information assistant helping someone understand \
 Indian and international law around traditional-knowledge and biodiversity \
@@ -90,6 +122,8 @@ rather than filling the gap with an assumption.
 
 When you state something drawn from a specific source, cite it inline in \
 brackets exactly as labeled below, e.g. [IN-1:3(p)].
+
+{language_instruction}
 
 RETRIEVED LEGAL TEXT:
 {context}
@@ -116,6 +150,7 @@ def _results_to_chunk_refs(results: dict) -> list[RetrievedChunkRef]:
             doc_id=meta.get("doc_id") or None,
             document_name=meta.get("document_name") or None,
             section_or_article=meta.get("section_or_article") or None,
+            legal_regime=meta.get("legal_regime") or None,
         ))
     return refs
 
@@ -154,7 +189,7 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
             ),
         )
 
-    prompt = _build_prompt(question, used_chunks)
+    prompt = _build_prompt(question, used_chunks, language=pip.language)
     client = _get_client()
     response = client.models.generate_content(model=_GEMINI_MODEL, contents=prompt)
     answer_text = response.text or ""
