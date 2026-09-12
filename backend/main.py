@@ -31,6 +31,22 @@ app.include_router(intake_router)
 app.include_router(classify_router)
 
 
+# API-03: catch anything that isn't already an HTTPException, anywhere in
+# the app, and return clean JSON instead of a raw Python traceback. Routes
+# still raise HTTPException for expected errors (404 unknown session, etc)
+# -- this only catches genuinely unexpected bugs.
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    print(f"[unhandled_exception] {request.method} {request.url.path}: {exc!r}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "An unexpected error occurred. This has been logged.",
+            "error_type": type(exc).__name__,
+        },
+    )
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}

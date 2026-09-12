@@ -24,6 +24,7 @@ from backend.logic.citation_verification import (
 from backend.services.citation_cache import store_citation
 from backend.services.pip_session_store import get_session
 from backend.services.vector_store import get_client, get_or_create_collection
+from backend.db.query_log import log_query
 
 router = APIRouter()
 
@@ -150,6 +151,24 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
                     "The generated answer did not contain enough citation-supported "
                     "content to return safely."
                 )
+
+        # API-04: log every query for post-demo debugging. Never let a
+        # logging failure break the actual response the user is waiting on.
+        try:
+            log_query(
+                session_id=pip.session_id,
+                question=request.question,
+                jurisdiction=pip.jurisdiction,
+                category=pip.classification.category,
+                objectives=list(pip.objective),
+                where_clause=result.retrieval_where_clause,
+                used_chunk_ids=[c.chunk_id for c in result.used_chunks],
+                answer_text=result.answer_text,
+                abstained=result.abstained,
+                abstain_reason=result.abstain_reason,
+            )
+        except Exception as log_error:
+            print(f"[query_log] failed to log query (non-fatal): {log_error}")
 
         return result
 
