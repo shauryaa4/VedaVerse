@@ -16,25 +16,37 @@ document_name, document_type, section_or_article, product_class_tags, date_enact
 last_verified_date, source_url, status_note). Each document directory also has a `meta.json`
 mirroring those blocks for the ingestion/chunking pipeline to load directly.
 
-## Status (as of 2026-09-11) — spec §6 minimum viable set is complete, deduplicated
+## Status (as of 2026-09-12) — spec §6 minimum viable set complete, one content gap fixed
 
-| Doc | doc_id | Status |
-|---|---|---|
-| Patents Act 1970 | IN-1 | Done |
-| Patents Rules 2003 (as amended) | IN-2 | Done |
-| Biological Diversity Act 2002 (as amended 2023) | IN-3 | Done |
-| Biological Diversity Rules 2024 | IN-4 | Done |
-| Drugs and Cosmetics Act & Rules | IN-5 | Done |
-| FSSAI Ayurveda-Aahar Regulations | IN-6 | Done |
-| Trade Marks Act 1999 | IN-7 | Done |
-| TRIPS (Art 1, 27) | INTL-1 | Done |
-| CBD (Art 15) | INTL-2 | Done |
-| Nagoya Protocol (Art 5, 6) | INTL-3 | Done |
-| WIPO GRATK Treaty (Art 3) | INTL-4 | Done — carries mandatory not-yet-in-force status note |
-| PCT basics | INTL-5 | Done |
+| Doc | doc_id | Sections | Status |
+|---|---|---|---|
+| Patents Act 1970 | IN-1 | 4 | Done |
+| Patents Rules 2003 (as amended) | IN-2 | 2 | Done |
+| Biological Diversity Act 2002 (as amended 2023) | IN-3 | 3 | Done |
+| Biological Diversity Rules 2024 | IN-4 | 1 | Done |
+| Drugs and Cosmetics Act & Rules | IN-5 | 3 | **Fixed — see gap below** |
+| FSSAI Ayurveda-Aahar Regulations | IN-6 | 2 | Done |
+| Trade Marks Act 1999 | IN-7 | 2 | Done |
+| TRIPS (Art 1, 27) | INTL-1 | 2 | Done |
+| CBD (Art 15) | INTL-2 | 1 | Done |
+| Nagoya Protocol (Art 5, 6) | INTL-3 | 1 | Done |
+| WIPO GRATK Treaty (Art 3) | INTL-4 | 1 | Done — carries mandatory not-yet-in-force status note |
+| PCT basics | INTL-5 | 1 | Done |
 
-**Every routing rule in the demo spec's §5 (Routing Engine) table now has exactly one corpus doc
-behind it** — see the dedup note below for why "exactly one" needed a cleanup pass.
+**12 documents, 23 sections total** (was 22). Every routing rule in the demo spec's §5 (Routing
+Engine) table has a corpus doc behind it.
+
+## Gap fixed 2026-09-12
+
+`india/cosmetic/regulatory_category` retrieval was returning only the Section 3(a) "Ayurvedic,
+Siddha or Unani drug" definition — because no file in `india/drugs-and-cosmetics-act/` actually
+defined **"cosmetic."** Routing was working correctly (right document set, right jurisdiction); the
+document set itself was just missing the clause. Added
+`india/drugs-and-cosmetics-act/section-3aaa-cosmetic-definition.md` (Section 3(aaa), tagged
+`product_class_tags: ["cosmetic"]`), sourced from the bare-act text and cleaned of amendment-bracket
+artifacts. Wired into that directory's `meta.json` and the aggregated `manifest.json`/
+`corpus_validation.csv`. No other content gaps were found against spec §6's minimum-viable-set
+table — everything else is unchanged.
 
 ## 2026-09-11 dedup pass
 
@@ -60,9 +72,17 @@ first** — this dedup only happened because two people didn't know the other ha
 
 ## Still open before the demo
 
-1. **Nobody with legal training has reviewed any of this yet.** Every file's `status_note` and the
-   `reviewed_by` column in `corpus_validation.csv` flag this.
+1. **Nobody with legal training has reviewed any of this yet** — including the new cosmetic
+   definition. Every file's `status_note` and the `reviewed_by` column in `corpus_validation.csv`
+   flag this.
 2. **Re-verify the WIPO GRATK ratification count** in `international/wipo-gratk/article-3-disclosure.md`
    close to the demo date — it was 4 of the required 15 at last check and moves as more States ratify.
 3. Deliberately **cut per spec §6**: GI Act, Designs Act, Copyright Act, Drugs and Magic Remedies Act.
 4. Gold test set (§17) and citation-verification wiring are downstream RAG-owner work, not corpus work.
+
+## Note on structure
+
+This corpus stays in the **one-subfolder-per-document, one-file-per-section** layout
+(`india/<doc-slug>/<section-slug>.md` + a per-directory `meta.json`), aggregated into the top-level
+`manifest.json`. If anyone proposes flattening this into one file per document, don't — the
+ingestion/chunking pipeline is built against this layout.

@@ -1,3 +1,27 @@
+# legal-corpus cosmetic-definition gap fix — 2026-09-12
+
+Structure unchanged from v0.4.0 below (`india/<doc-slug>/<section-slug>.md` + per-directory
+`meta.json`, aggregated into `manifest.json`). One content gap fixed, no restructuring.
+
+**Gap fixed:** `india/drugs-and-cosmetics-act/` had no file defining "cosmetic" at all. Caught during
+a human-judgment review pass over sample query outputs: `india / cosmetic / regulatory_category`
+queries were returning a single chunk, and that chunk was the Section 3(a) "Ayurvedic, Siddha or
+Unani drug" definition — not a cosmetic definition, because the corpus simply didn't have one.
+Routing was correct (right document set, right jurisdiction); the document set was incomplete.
+
+Added `india/drugs-and-cosmetics-act/section-3aaa-cosmetic-definition.md` — Section 3(aaa)
+("cosmetic" means any article intended to be rubbed, poured, sprinkled or sprayed on... for
+cleansing, beautifying, promoting attractiveness, or altering the appearance), tagged
+`product_class_tags: ["cosmetic"]`, cleaned of amendment-bracket artifacts (`5[7[(aaa)]`, trailing
+`10[*]`). Wired into `india/drugs-and-cosmetics-act/meta.json`, and `manifest.json` /
+`corpus_validation.csv` regenerated from all per-directory `meta.json` files. IN-5 now shows 3
+sections instead of 2; corpus total is 23 sections across 12 documents (was 22). Not yet
+legal-mentor reviewed, same as the rest of the corpus.
+
+*(A prior pass briefly flattened this corpus into one file per document, matching an early planning
+sketch. Reverted per team feedback — the backend ingestion pipeline is built against this
+per-section-file layout, and flattening it would have broken that.)*
+
 # legal-corpus dedup pass — 2026-09-11, round 3
 
 This round is cleanup only — no new legal content. Two teammates independently built the same two
