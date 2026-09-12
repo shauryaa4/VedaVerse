@@ -34,8 +34,7 @@ from pydantic import BaseModel
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)$", re.DOTALL)
 
 # Files that live alongside real corpus docs but are never corpus content themselves.
-_SKIP_FILENAMES = {"readme.md", "_template.meta.json", "meta.json", "manifest.json", "corpus_validation.csv"}
-
+_SKIP_FILENAMES = {"readme.md", "changes.md", "_template.meta.json", "meta.json", "manifest.json", "corpus_validation.csv"}
 # Rough token estimate: ~0.75 words per token is the usual rule of thumb, i.e.
 # tokens ≈ words / 0.75. We only need this to flag oversized chunks, not for
 # precision, so a simple word count multiplier is fine.
@@ -148,7 +147,11 @@ def load_chunks_from_directory(corpus_root: Path) -> list[Chunk]:
 
         if md_file.name in meta_json_lookup:
             meta = meta_json_lookup[md_file.name]
-            text = raw.strip()
+            # Even though meta.json supplies the structured metadata, the
+            # .md file may still carry its own frontmatter block. Strip it
+            # so a stale/duplicate copy never leaks into what the LLM sees.
+            _, body_after_frontmatter = _parse_frontmatter(raw)
+            text = (body_after_frontmatter if body_after_frontmatter is not None else raw).strip()
             chunks.append(_build_chunk(meta, text, md_file, "meta_json"))
             continue
 

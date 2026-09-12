@@ -1,7 +1,7 @@
 ---
 doc_id: INTL-4
 jurisdiction: international
-legal_regime: treaty_patent
+legal_regime: wipo_gratk
 document_name: "WIPO Treaty on Intellectual Property, Genetic Resources and Associated Traditional Knowledge (GRATK Treaty)"
 document_type: treaty
 section_or_article: "Article 3 (Disclosure Requirement)"
