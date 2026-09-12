@@ -22,6 +22,7 @@ from backend.logic.citation_verification import (
     strip_unsupported_sentences,
 )
 from backend.services.citation_cache import store_citation
+from backend.services.pip_session_store import get_session
 from backend.services.vector_store import get_client, get_or_create_collection
 
 router = APIRouter()
@@ -39,6 +40,7 @@ def _get_collection():
         client = get_client(_PERSIST_DIR)
         _collection = get_or_create_collection(client)
     return _collection
+
 
 def _cache_citations(
     session_id: str,
@@ -102,15 +104,27 @@ def _cache_citations(
 
     return classifications
 
+
 class QueryRequest(BaseModel):
-    pip: ProductIntelligenceProfile
+    session_id: str | None = None
+    pip: ProductIntelligenceProfile | None = None
     question: str
+
 
 @router.post("/query", response_model=RagResponse)
 def query_endpoint(request: QueryRequest) -> RagResponse:
+    if request.session_id is not None:
+        pip = get_session(request.session_id)
+        if pip is None:
+            raise HTTPException(status_code=404, detail="Unknown session_id. Call POST /session first.")
+    elif request.pip is not None:
+        pip = request.pip
+    else:
+        raise HTTPException(status_code=422, detail="Provide either session_id or pip.")
+
     try:
         result = answer_query(
-            request.pip,
+            pip,
             request.question,
             _get_collection(),
         )
@@ -119,7 +133,7 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
 
         if not result.abstained:
             classifications = _cache_citations(
-                request.pip.session_id,
+                pip.session_id,
                 result,
             )
 
