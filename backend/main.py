@@ -13,7 +13,7 @@ from backend.routes.citation import router as citation_router
 from backend.routes.session import router as session_router
 from backend.routes.intake import router as intake_router
 from backend.routes.classify import router as classify_router
-from backend.routes.tkdl_routes import router as tkdl_routeer
+from backend.routes.tkdl_routes import router as tkdl_router
 from backend.routes.abs_routes import router as abs_router
 
 app = FastAPI(title="IP-SAKTI Sahayak API", version="0.1.0")

@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.logic.abs_helper import assess_abs
-from backend.models.abs import ABSAssessment
+from backend.models.abs_models import ABSAssessment
 from backend.services.pip_session_store import get_session
 
 router = APIRouter()

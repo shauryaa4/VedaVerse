@@ -51,11 +51,17 @@ build spec section 18):
     because no such list is loaded as data anywhere in this codebase.
 """
 
-from backend.models.abs import ABSAssessment
+from backend.models.abs_models import ABSAssessment
 from backend.models.pip import ProductIntelligenceProfile
 
 _INDIA_KEYWORDS = ("india", "bharat", "indian")
 _NON_INDIA_HINTS = ("imported", "sourced from outside india", "not india", "abroad", "outside india")
+# Explicit vague/non-answer phrases. Checked BEFORE the generic short-string
+# non-India fallback below, so a genuinely ambiguous one-word answer like
+# "unclear" or "unknown" falls through to the ambiguous/"possible" branch in
+# assess_abs() instead of being misread as a confident non-India signal just
+# because it's short and doesn't mention India.
+_AMBIGUOUS_HINTS = ("unclear", "unknown", "unsure", "not sure", "n/a", "na", "unspecified", "tbd", "don't know", "dont know")
 
 # Biological Diversity Act "biological resource" (s.2(c)) covers plants, animals
 # and micro-organisms (and their parts/genetic material) — it does NOT cover
@@ -69,14 +75,26 @@ def _region_signals_india(region: str) -> bool:
     return any(k in r for k in _INDIA_KEYWORDS)
 
 
+def _region_signals_ambiguous(region: str) -> bool:
+    r = region.lower().strip()
+    return any(k in r for k in _AMBIGUOUS_HINTS)
+
+
 def _region_signals_non_india(region: str) -> bool:
     r = region.lower()
     if any(k in r for k in _NON_INDIA_HINTS):
         return True
     # A region string that names a country/place but never mentions India at all
     # is treated as a (weak) non-India signal only if it's non-trivially specific
-    # (avoids misreading a blank/one-word ambiguous entry as "not India").
-    return bool(r.strip()) and not _region_signals_india(r) and len(r.split()) <= 4
+    # (avoids misreading a blank/one-word ambiguous entry as "not India", and
+    # avoids misreading an explicit vague answer like "unclear" as non-India --
+    # both should fall through to the ambiguous/"possible" branch instead).
+    return (
+        bool(r.strip())
+        and not _region_signals_india(r)
+        and not _region_signals_ambiguous(r)
+        and len(r.split()) <= 4
+    )
 
 
 def _has_biological_ingredients(pip: ProductIntelligenceProfile) -> bool:
@@ -145,6 +163,28 @@ def assess_abs(pip: ProductIntelligenceProfile) -> ABSAssessment:
     # --- Rule 4: origin known — read the free-text region -------------------
     region = pip.product.biological_origin_region or ""
 
+    # IMPORTANT: non-India must be checked before India. A phrase like "outside
+    # India" contains the literal substring "india", so checking the India
+    # keyword first would misclassify an explicit non-India statement as
+    # India-linked. See _region_signals_non_india's own hint list, which
+    # already handles these phrases explicitly for exactly this reason.
+    if _region_signals_non_india(region):
+        reasoning.append(
+            f"Biological origin is declared as outside India ('{region}'). India's "
+            "Biological Diversity Act access-approval requirements (NBA/SBB) are "
+            "generally triggered by resources obtained from India, so they are unlikely "
+            "to apply to this specific resource on the facts given."
+        )
+        reasoning.append(
+            "This does NOT mean no ABS obligation exists at all — the resource's country "
+            "of origin may have its own ABS law, and if that country and India are both "
+            "parties to the Nagoya Protocol, cross-border obligations (prior informed "
+            "consent / mutually agreed terms in the country of origin) can still apply. "
+            "This tool only models India's domestic regime."
+        )
+        assessment = ABSAssessment(relevance="unlikely", reasoning=reasoning)
+        return _apply_ip_filing_flag(pip, assessment)
+
     if _region_signals_india(region):
         reasoning.append(
             f"Biological origin is declared as India-linked ('{region}'). Under the "
@@ -176,23 +216,6 @@ def assess_abs(pip: ProductIntelligenceProfile) -> ABSAssessment:
         assessment = ABSAssessment(
             relevance="likely", reasoning=reasoning, applicable_authority_guidance=authority_guidance
         )
-        return _apply_ip_filing_flag(pip, assessment)
-
-    if _region_signals_non_india(region):
-        reasoning.append(
-            f"Biological origin is declared as outside India ('{region}'). India's "
-            "Biological Diversity Act access-approval requirements (NBA/SBB) are "
-            "generally triggered by resources obtained from India, so they are unlikely "
-            "to apply to this specific resource on the facts given."
-        )
-        reasoning.append(
-            "This does NOT mean no ABS obligation exists at all — the resource's country "
-            "of origin may have its own ABS law, and if that country and India are both "
-            "parties to the Nagoya Protocol, cross-border obligations (prior informed "
-            "consent / mutually agreed terms in the country of origin) can still apply. "
-            "This tool only models India's domestic regime."
-        )
-        assessment = ABSAssessment(relevance="unlikely", reasoning=reasoning)
         return _apply_ip_filing_flag(pip, assessment)
 
     # Ambiguous / unparseable free-text region.
