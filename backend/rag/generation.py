@@ -16,7 +16,7 @@ everything that calls answer_query() stays the same.
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from google import genai
@@ -57,18 +57,30 @@ class RetrievedChunkRef(BaseModel):
     doc_id: str | None
     document_name: str | None = None
     section_or_article: str | None
-    legal_regime: str | None = None  # RAG-05: needed to group chunks by regime in the prompt
+    legal_regime: str | None = (
+        None  # RAG-05: needed to group chunks by regime in the prompt
+    )
+
 
 class RagResponse(BaseModel):
-    answer_text: str                       # the generated answer, unverified
-    used_chunks: list[RetrievedChunkRef]    # every chunk actually passed into the prompt
-    retrieval_where_clause: dict | None     # what build_where_clause() produced, for debugging
-    abstained: bool = False                 # True if no relevant chunks were found
+    answer_text: str  # the generated answer, unverified
+    used_chunks: list[RetrievedChunkRef]  # every chunk actually passed into the prompt
+    retrieval_where_clause: (
+        dict | None
+    )  # what build_where_clause() produced, for debugging
+    abstained: bool = False  # True if no relevant chunks were found
     abstain_reason: str | None = None
     status_notes: list[str] = []
+    # CONF-01/05: the confidence badge contract (build spec §9). Distinct
+    # from `abstained` -- the frontend renders a 4-state badge (HIGH/MEDIUM/
+    # LOW/ABSTAIN) off this field, not by string-matching answer_text.
+    confidence: Literal["high", "medium", "low"] = "high"
+    confidence_reason: str | None = None
 
 
-def _build_prompt(question: str, chunks: list[RetrievedChunkRef], language: str = "en") -> str:
+def _build_prompt(
+    question: str, chunks: list[RetrievedChunkRef], language: str = "en"
+) -> str:
     """
     Deliberately blunt instructions, repeated: this is a legal-answers tool,
     so 'don't invent law' matters more than a nicely-worded prompt. Each
@@ -144,15 +156,17 @@ def _results_to_chunk_refs(results: dict) -> list[RetrievedChunkRef]:
 
     refs = []
     for chunk_id, text, meta in zip(ids, documents, metadatas):
-        refs.append(RetrievedChunkRef(
-            chunk_id=chunk_id,
-            text=text,
-            source_url=meta.get("source_url") or None,
-            doc_id=meta.get("doc_id") or None,
-            document_name=meta.get("document_name") or None,
-            section_or_article=meta.get("section_or_article") or None,
-            legal_regime=meta.get("legal_regime") or None,
-        ))
+        refs.append(
+            RetrievedChunkRef(
+                chunk_id=chunk_id,
+                text=text,
+                source_url=meta.get("source_url") or None,
+                doc_id=meta.get("doc_id") or None,
+                document_name=meta.get("document_name") or None,
+                section_or_article=meta.get("section_or_article") or None,
+                legal_regime=meta.get("legal_regime") or None,
+            )
+        )
     return refs
 
 
