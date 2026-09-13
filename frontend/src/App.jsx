@@ -5,8 +5,9 @@ import Landing from './screens/Landing.jsx';
 import JurisdictionSelect from './screens/JurisdictionSelect.jsx';
 import Questionnaire from './screens/Questionnaire.jsx';
 import ClassificationResult from './screens/ClassificationResult.jsx';
-import WorkspacePlaceholder from './screens/WorkspacePlaceholder.jsx';
-import { createSession, submitIntake, classify } from './api/client.js';
+import QueryWorkspace from './screens/QueryWorkspace.jsx';
+import CitationDetailModal from './components/CitationDetailModal.jsx';
+import { createSession, submitIntake, classify, askQuestion, getCitation } from './api/client.js';
 
 /**
  * Owns all real session/PIP state and every backend call in the wizard.
@@ -21,6 +22,17 @@ export default function App() {
   const [classification, setClassification] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Part 2 — query/answer workspace state. `queryHistory` holds every
+  // {id, question, result} turn from POST /query this session, newest
+  // last (QueryWorkspace reverses it for display). `citationModal` is
+  // null when closed, or {label, loading, error, detail} while a
+  // citation chip's GET /citation/{doc_id}/{section} request is in
+  // flight or has resolved.
+  const [queryHistory, setQueryHistory] = useState([]);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState(null);
+  const [citationModal, setCitationModal] = useState(null);
 
   const handleStart = async () => {
     setLoading(true);
@@ -66,11 +78,39 @@ export default function App() {
     }
   };
 
+  const handleAskQuestion = async (question) => {
+    setQueryLoading(true);
+    setQueryError(null);
+    try {
+      const result = await askQuestion(pip.session_id, question);
+      setQueryHistory((prev) => [...prev, { id: `${Date.now()}-${prev.length}`, question, result }]);
+    } catch (err) {
+      setQueryError(err.message);
+    } finally {
+      setQueryLoading(false);
+    }
+  };
+
+  const handleOpenCitation = async (docId, section, label) => {
+    setCitationModal({ label, loading: true, error: null, detail: null });
+    try {
+      const detail = await getCitation(pip.session_id, docId, section);
+      setCitationModal({ label, loading: false, error: null, detail });
+    } catch (err) {
+      setCitationModal({ label, loading: false, error: err.message, detail: null });
+    }
+  };
+
+  const handleCloseCitation = () => setCitationModal(null);
+
   const handleRestart = () => {
     setStep('landing');
     setPip(null);
     setClassification(null);
     setError(null);
+    setQueryHistory([]);
+    setQueryError(null);
+    setCitationModal(null);
   };
 
   return (
@@ -107,15 +147,29 @@ export default function App() {
         )}
 
         {step === 'workspace' && (
-          <WorkspacePlaceholder
+          <QueryWorkspace
             pip={pip}
             classification={classification}
-            onBack={() => setStep('classification')}
+            history={queryHistory}
+            onAsk={handleAskQuestion}
+            loading={queryLoading}
+            error={queryError}
+            onOpenCitation={handleOpenCitation}
           />
         )}
       </main>
 
       {step !== 'landing' && <EscalationCTA />}
+
+      {citationModal && (
+        <CitationDetailModal
+          label={citationModal.label}
+          loading={citationModal.loading}
+          error={citationModal.error}
+          detail={citationModal.detail}
+          onClose={handleCloseCitation}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,117 @@
+.workspace {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px 96px;
+}
+
+.workspace__summary {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.workspace__summary dl {
+  display: flex;
+  gap: 32px;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.workspace__summary dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 3px;
+}
+
+.workspace__summary dd {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.workspace__objectives {
+  margin-bottom: 20px;
+}
+
+.workspace__objectives-label {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0 0 10px;
+}
+
+.workspace__objective-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace__objective-chip {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--turmeric-dim);
+  background: var(--turmeric-light);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+.workspace__objective-chip:disabled {
+  opacity: 0.6;
+}
+
+.workspace__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.workspace__input {
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  resize: vertical;
+}
+
+.workspace__submit {
+  align-self: flex-end;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--herb);
+  border: 1px solid var(--herb-dark);
+  border-radius: 8px;
+  padding: 11px 24px;
+}
+
+.workspace__submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.workspace__error {
+  color: var(--danger);
+  font-size: 13.5px;
+  margin: 4px 0 16px;
+}
+
+.workspace__history {
+  margin-top: 28px;
+}
+
+.workspace__empty,
+.workspace__loading {
+  font-size: 14px;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 24px 0;
+}
