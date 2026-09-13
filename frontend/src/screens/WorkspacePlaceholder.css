@@ -1,0 +1,61 @@
+.workspace-placeholder {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 96px;
+}
+
+.workspace-placeholder__card {
+  padding: 32px;
+}
+
+.workspace-placeholder__eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--turmeric-dim);
+  margin: 0 0 8px;
+}
+
+.workspace-placeholder__body {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  margin: 8px 0 24px;
+}
+
+.workspace-placeholder__summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 0 0 28px;
+  padding: 16px;
+  background: var(--herb-light);
+  border-radius: 10px;
+}
+
+.workspace-placeholder__summary dt {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--herb-dark);
+  margin-bottom: 2px;
+}
+
+.workspace-placeholder__summary dd {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.workspace-placeholder__back {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 20px;
+}

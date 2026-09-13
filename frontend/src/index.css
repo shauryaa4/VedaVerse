@@ -1,4 +1,5 @@
 :root {
+  /* --- existing tokens, unchanged --- */
   --ink: #1B1A17;
   --paper: #F7F4EE;
   --turmeric: #B8842A;
@@ -8,6 +9,26 @@
   --border: #DDD6C7;
   --font-serif: 'Fraunces', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+
+  /* --- added for the built-out screens (Part 1) --- */
+  --surface: #FFFFFF;
+  --ink-muted: #6B6455;
+
+  --herb-light: #E4ECE8;
+  --turmeric-light: #F6EBD8;
+
+  --danger: #A6432B;
+  --danger-light: #FBE7E2;
+
+  --warning: #96721A;
+  --warning-light: #FBF0DD;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(27, 26, 23, 0.06);
+  --shadow-md: 0 4px 16px rgba(27, 26, 23, 0.08);
 }
 
 * {
@@ -19,4 +40,32 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell__main {
+  flex: 1;
 }

@@ -1,0 +1,78 @@
+.jurisdiction {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 96px;
+}
+
+.jurisdiction__title {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.jurisdiction__subtitle {
+  font-size: 14.5px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin: 0 0 28px;
+  max-width: 60ch;
+}
+
+.jurisdiction__error {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+
+.jurisdiction__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.jurisdiction__option {
+  text-align: left;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.jurisdiction__option:hover:not(:disabled) {
+  border-color: var(--herb);
+  transform: translateY(-1px);
+}
+
+.jurisdiction__option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jurisdiction__option-title {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.jurisdiction__option-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+.jurisdiction__option-loading {
+  font-size: 12.5px;
+  color: var(--herb-dark);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .jurisdiction__options {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,172 @@
+.questionnaire {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.questionnaire__title {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.questionnaire__subtitle {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 0 0 -8px;
+}
+
+.questionnaire__field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.questionnaire__field > label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.questionnaire__field input[type='text'] {
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.questionnaire__followup {
+  margin-top: 4px;
+}
+
+.questionnaire__options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 16px;
+}
+
+.questionnaire__radio,
+.questionnaire__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.questionnaire__radio:has(input:checked),
+.questionnaire__checkbox:has(input:checked) {
+  border-color: var(--herb);
+  background: var(--herb-light);
+}
+
+.questionnaire__composition {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.composition-row {
+  display: grid;
+  grid-template-columns: 2fr 0.7fr 0.9fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.composition-row input[type='text'] {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  width: 100%;
+}
+
+.composition-row__active {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.composition-row__remove {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.composition-row__remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.questionnaire__add-row {
+  align-self: flex-start;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--herb-dark);
+  background: none;
+  border: none;
+  padding: 4px 0;
+}
+
+.questionnaire__submit {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--herb);
+  border: 1px solid var(--herb-dark);
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.questionnaire__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.questionnaire__error {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+
+@media (max-width: 640px) {
+  .composition-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'ingredient ingredient'
+      'quantity unit'
+      'active remove';
+  }
+  .composition-row__ingredient { grid-area: ingredient; }
+  .composition-row__quantity { grid-area: quantity; }
+  .composition-row__unit { grid-area: unit; }
+  .composition-row__active { grid-area: active; }
+  .composition-row__remove { grid-area: remove; justify-self: end; }
+}

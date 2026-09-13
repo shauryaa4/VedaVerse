@@ -1,0 +1,148 @@
+.app-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px 0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.app-header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+}
+
+.app-header__brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--herb);
+  color: var(--paper);
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.app-header__brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header__brand-title {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+.app-header__brand-subtitle {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.app-header__jurisdiction {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.app-header__jurisdiction--india {
+  background: var(--herb-light);
+  color: var(--herb-dark);
+}
+
+.app-header__jurisdiction--international {
+  background: var(--turmeric-light);
+  color: var(--turmeric-dim);
+}
+
+.app-header__steps {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 12px;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.app-header__step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.app-header__step-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.app-header__step-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.app-header__step--active {
+  background: var(--herb-light);
+}
+
+.app-header__step--active .app-header__step-index {
+  background: var(--herb);
+  color: var(--paper);
+}
+
+.app-header__step--active .app-header__step-label {
+  color: var(--herb-dark);
+}
+
+.app-header__step--done .app-header__step-index {
+  background: var(--herb-dark);
+  color: var(--paper);
+}
+
+.app-header__step--done .app-header__step-label {
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 12px 16px 0;
+  }
+
+  .app-header__brand-subtitle {
+    display: none;
+  }
+}
