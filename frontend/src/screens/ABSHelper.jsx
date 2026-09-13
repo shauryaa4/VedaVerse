@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import './ABSHelper.css';
 
 /**
@@ -16,7 +17,7 @@ import './ABSHelper.css';
  * TKDLSearch) — no re-asking the user anything, per N-D4-05. disclaimer
  * is rendered verbatim, same rule as TKDL's.
  */
-export default function ABSHelper({ state, onFetch }) {
+export default function ABSHelper({ state, onFetch, onRestart }) {
   const { data, loading, error, fetched } = state;
 
   useEffect(() => {
@@ -32,7 +33,9 @@ export default function ABSHelper({ state, onFetch }) {
       </div>
 
       {loading && <p className="abs-helper__status">Checking Access &amp; Benefit-Sharing relevance…</p>}
-      {error && <p className="abs-helper__status abs-helper__status--error">{error}</p>}
+      {/* Part 4 fix: same dead-end issue as TKDLSearch — give a retry path
+          that doesn't require leaving the tab. */}
+      <ErrorNotice error={error} onRetry={onFetch} onRestart={onRestart} retryLabel="Re-check" />
 
       {data && (
         <div className="abs-helper__card card">

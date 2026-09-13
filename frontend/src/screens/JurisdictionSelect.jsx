@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import './JurisdictionSelect.css';
 
 /**
@@ -7,13 +8,17 @@ import './JurisdictionSelect.css';
  * spec §3 Q1 — this is the field the entire routing engine (§5) branches on,
  * so there's no "skip" option here.
  */
-export default function JurisdictionSelect({ onSelect, loading, error }) {
+export default function JurisdictionSelect({ onSelect, loading, error, onRestart }) {
   const [pending, setPending] = useState(null);
 
   const handlePick = (value) => {
     setPending(value);
     onSelect(value);
   };
+
+  // Part 4: clicking the same option again is a perfectly good retry for a
+  // failed /intake call (idempotent — no need for a separate button), so
+  // ErrorNotice only needs onRestart here, not onRetry.
 
   return (
     <div className="jurisdiction">
@@ -24,7 +29,7 @@ export default function JurisdictionSelect({ onSelect, loading, error }) {
         mixed in one answer.
       </p>
 
-      {error && <p className="jurisdiction__error">{error}</p>}
+      <ErrorNotice error={error} onRestart={onRestart} />
 
       <div className="jurisdiction__options">
         <button

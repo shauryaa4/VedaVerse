@@ -137,3 +137,23 @@
   color: var(--ink-muted);
   font-style: italic;
 }
+
+@media (max-width: 640px) {
+  .workspace {
+    padding: 24px 14px 64px;
+  }
+
+  .workspace__summary dl {
+    gap: 18px;
+  }
+
+  .workspace__submit {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .workspace__language {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+}

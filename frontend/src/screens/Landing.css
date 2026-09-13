@@ -75,3 +75,22 @@
   border-radius: 8px;
   font-size: 13.5px;
 }
+
+@media (max-width: 640px) {
+  .landing {
+    padding: 28px 14px 64px;
+  }
+
+  .landing__card {
+    padding: 24px 20px;
+  }
+
+  .landing__title {
+    font-size: 24px;
+  }
+
+  .landing__cta {
+    width: 100%;
+    text-align: center;
+  }
+}

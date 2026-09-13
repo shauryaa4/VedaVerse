@@ -92,3 +92,20 @@
   border-radius: 8px;
   padding: 10px 18px;
 }
+
+@media (max-width: 640px) {
+  .citation-modal__overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .citation-modal {
+    padding: 20px;
+    max-height: 85vh;
+  }
+
+  .citation-modal__close {
+    width: 100%;
+    text-align: center;
+  }
+}

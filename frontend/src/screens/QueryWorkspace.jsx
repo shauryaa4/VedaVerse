@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AnswerCard from './AnswerCard.jsx';
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import { OBJECTIVE_OPTIONS, CATEGORY_LABELS } from '../data/options.js';
 import './QueryWorkspace.css';
 
@@ -40,6 +41,7 @@ export default function QueryWorkspace({
   loading,
   error,
   onOpenCitation,
+  onRestart,
 }) {
   const [question, setQuestion] = useState('');
   // Part 3 — Hindi toggle. /query already accepts language: "en"|"hi" and
@@ -142,7 +144,7 @@ export default function QueryWorkspace({
         </button>
       </form>
 
-      {error && <p className="workspace__error">{error}</p>}
+      <ErrorNotice error={error} onRestart={onRestart} />
 
       <div className="workspace__history">
         {history.length === 0 && !loading && (

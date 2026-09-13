@@ -104,3 +104,27 @@
   border-radius: 8px;
   padding: 11px 20px;
 }
+
+@media (max-width: 640px) {
+  .classification {
+    padding: 24px 14px 64px;
+  }
+
+  .classification__card {
+    padding: 22px 18px;
+  }
+
+  .classification__category {
+    font-size: 22px;
+  }
+
+  .classification__actions {
+    flex-direction: column;
+  }
+
+  .classification__back,
+  .classification__continue {
+    width: 100%;
+    text-align: center;
+  }
+}

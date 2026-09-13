@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import CompositionRow, { CommonIngredientsDatalist } from './CompositionRow.jsx';
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import {
   PROTECTION_TARGET_OPTIONS,
   INTENDED_USE_OPTIONS,
@@ -27,7 +28,7 @@ const newRow = () => ({
  * endpoint's own docstring says is a valid way to handle gating from this
  * side). Section numbers in comments below refer to build spec §3.
  */
-export default function Questionnaire({ onSubmit, loading, error }) {
+export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
   const [productName, setProductName] = useState('');
   const [protectionTarget, setProtectionTarget] = useState('');
   const [composition, setComposition] = useState([newRow()]);
@@ -331,9 +332,11 @@ export default function Questionnaire({ onSubmit, loading, error }) {
         </div>
       </div>
 
-      {(formError || error) && (
-        <p className="questionnaire__error">{formError || error}</p>
-      )}
+      {formError && <p className="questionnaire__error">{formError}</p>}
+      {/* Part 4: this is the longest single step in the wizard, so a lost
+          session here is the most expensive place to hit it — offer the
+          restart explicitly rather than just an error line. */}
+      <ErrorNotice error={error} onRestart={onRestart} />
 
       <button type="submit" className="questionnaire__submit" disabled={loading}>
         {loading ? 'Classifying…' : 'Continue to classification'}

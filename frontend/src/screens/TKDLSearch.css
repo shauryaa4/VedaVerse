@@ -148,3 +148,19 @@
   border-radius: 8px;
   padding: 10px 18px;
 }
+
+@media (max-width: 640px) {
+  .tkdl {
+    padding: 16px 14px 64px;
+  }
+
+  .tkdl__assessment,
+  .tkdl__match {
+    padding: 16px 16px;
+  }
+
+  .tkdl__refresh {
+    width: 100%;
+    text-align: center;
+  }
+}

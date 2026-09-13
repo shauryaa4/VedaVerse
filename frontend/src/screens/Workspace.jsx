@@ -33,6 +33,7 @@ export default function Workspace({
   onFetchTkdl,
   abs,
   onFetchAbs,
+  onRestart,
 }) {
   const [tab, setTab] = useState('query');
 
@@ -64,12 +65,13 @@ export default function Workspace({
           loading={queryLoading}
           error={queryError}
           onOpenCitation={onOpenCitation}
+          onRestart={onRestart}
         />
       )}
 
-      {tab === 'tkdl' && <TKDLSearch state={tkdl} onFetch={onFetchTkdl} />}
+      {tab === 'tkdl' && <TKDLSearch state={tkdl} onFetch={onFetchTkdl} onRestart={onRestart} />}
 
-      {tab === 'abs' && <ABSHelper state={abs} onFetch={onFetchAbs} />}
+      {tab === 'abs' && <ABSHelper state={abs} onFetch={onFetchAbs} onRestart={onRestart} />}
     </div>
   );
 }

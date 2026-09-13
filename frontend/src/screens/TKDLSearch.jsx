@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import './TKDLSearch.css';
 
 /**
@@ -22,7 +23,7 @@ import './TKDLSearch.css';
  * verbatim — both mirror PriorArtAssessment.disclaimer, hard-coded on the
  * backend per build spec §10/§19/§28, never paraphrased here.
  */
-export default function TKDLSearch({ state, onFetch }) {
+export default function TKDLSearch({ state, onFetch, onRestart }) {
   const { data, loading, error, fetched } = state;
 
   useEffect(() => {
@@ -38,7 +39,11 @@ export default function TKDLSearch({ state, onFetch }) {
       </div>
 
       {loading && <p className="tkdl__status">Checking against the demo TKDL dataset…</p>}
-      {error && <p className="tkdl__status tkdl__status--error">{error}</p>}
+      {/* Part 4 fix: previously, an error here left the tab with no way to
+          retry short of switching tabs and back — the "Re-check" button
+          only rendered inside the `data &&` block below. onRetry gives the
+          same recheck without that dead end. */}
+      <ErrorNotice error={error} onRetry={onFetch} onRestart={onRestart} retryLabel="Re-check" />
 
       {data && (
         <>

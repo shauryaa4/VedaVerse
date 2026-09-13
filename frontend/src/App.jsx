@@ -49,6 +49,15 @@ export default function App() {
   const [tkdl, setTkdl] = useState({ data: null, loading: false, error: null, fetched: false });
   const [abs, setAbs] = useState({ data: null, loading: false, error: null, fetched: false });
 
+  // Part 4 — every catch below preserves err.status (set by api/client.js
+  // on every thrown error) alongside err.message, instead of collapsing to
+  // just the string. ErrorNotice uses the status (404 = unknown session_id)
+  // to tell a genuinely-lost-session failure apart from any other error and
+  // offer "Start a new session" instead of a dead-end message. See
+  // components/ErrorNotice.jsx's docstring for the full reasoning (build
+  // spec §19).
+  const asErrorState = (err) => ({ message: err.message, status: err.status });
+
   const handleStart = async () => {
     setLoading(true);
     setError(null);
@@ -57,7 +66,7 @@ export default function App() {
       setPip(session);
       setStep('jurisdiction');
     } catch (err) {
-      setError(err.message);
+      setError(asErrorState(err));
     } finally {
       setLoading(false);
     }
@@ -71,7 +80,7 @@ export default function App() {
       setPip(updated);
       setStep('questionnaire');
     } catch (err) {
-      setError(err.message);
+      setError(asErrorState(err));
     } finally {
       setLoading(false);
     }
@@ -87,7 +96,7 @@ export default function App() {
       setClassification(result);
       setStep('classification');
     } catch (err) {
-      setError(err.message);
+      setError(asErrorState(err));
     } finally {
       setLoading(false);
     }
@@ -103,7 +112,7 @@ export default function App() {
         { id: `${Date.now()}-${prev.length}`, question, result, language },
       ]);
     } catch (err) {
-      setQueryError(err.message);
+      setQueryError(asErrorState(err));
     } finally {
       setQueryLoading(false);
     }
@@ -115,7 +124,7 @@ export default function App() {
       const data = await tkdlSearch(pip.session_id);
       setTkdl({ data, loading: false, error: null, fetched: true });
     } catch (err) {
-      setTkdl({ data: null, loading: false, error: err.message, fetched: true });
+      setTkdl({ data: null, loading: false, error: asErrorState(err), fetched: true });
     }
   };
 
@@ -125,7 +134,7 @@ export default function App() {
       const data = await absAssess(pip.session_id);
       setAbs({ data, loading: false, error: null, fetched: true });
     } catch (err) {
-      setAbs({ data: null, loading: false, error: err.message, fetched: true });
+      setAbs({ data: null, loading: false, error: asErrorState(err), fetched: true });
     }
   };
 
@@ -135,7 +144,7 @@ export default function App() {
       const detail = await getCitation(pip.session_id, docId, section);
       setCitationModal({ label, loading: false, error: null, detail });
     } catch (err) {
-      setCitationModal({ label, loading: false, error: err.message, detail: null });
+      setCitationModal({ label, loading: false, error: asErrorState(err), detail: null });
     }
   };
 
@@ -171,11 +180,17 @@ export default function App() {
             onSelect={handleJurisdictionSelect}
             loading={loading}
             error={error}
+            onRestart={handleRestart}
           />
         )}
 
         {step === 'questionnaire' && (
-          <Questionnaire onSubmit={handleQuestionnaireSubmit} loading={loading} error={error} />
+          <Questionnaire
+            onSubmit={handleQuestionnaireSubmit}
+            loading={loading}
+            error={error}
+            onRestart={handleRestart}
+          />
         )}
 
         {step === 'classification' && (
@@ -199,6 +214,7 @@ export default function App() {
             onFetchTkdl={handleFetchTkdl}
             abs={abs}
             onFetchAbs={handleFetchAbs}
+            onRestart={handleRestart}
           />
         )}
       </main>
@@ -212,6 +228,7 @@ export default function App() {
           error={citationModal.error}
           detail={citationModal.detail}
           onClose={handleCloseCitation}
+          onRestart={handleRestart}
         />
       )}
     </div>

@@ -28,3 +28,21 @@
   color: var(--herb-dark);
   border-bottom-color: var(--herb);
 }
+
+@media (max-width: 640px) {
+  .workspace-shell {
+    padding-top: 12px;
+  }
+
+  .workspace-shell__tabs {
+    padding: 0 12px;
+    gap: 0;
+  }
+
+  .workspace-shell__tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 12.5px;
+  }
+}

@@ -1,3 +1,4 @@
+import ErrorNotice from '../components/ErrorNotice.jsx';
 import './Landing.css';
 
 /**
@@ -26,7 +27,10 @@ export default function Landing({ onStart, loading, error }) {
           <li>India and international answers are kept in separate, labelled lanes</li>
         </ul>
 
-        {error && <p className="landing__error">{error}</p>}
+        {/* Part 4: no session exists yet at this screen, so there's nothing
+            to "restart" from — the only sensible recovery is retrying
+            session creation itself. */}
+        <ErrorNotice error={error} onRetry={onStart} retryLabel="Try again" />
 
         <button
           type="button"

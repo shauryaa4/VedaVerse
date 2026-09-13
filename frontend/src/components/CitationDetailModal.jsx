@@ -1,3 +1,4 @@
+import ErrorNotice from './ErrorNotice.jsx';
 import './CitationDetailModal.css';
 
 /**
@@ -13,7 +14,7 @@ import './CitationDetailModal.css';
  * for this session), this still shows the citation label and the error,
  * rather than leaving a blank modal.
  */
-export default function CitationDetailModal({ label, loading, error, detail, onClose }) {
+export default function CitationDetailModal({ label, loading, error, detail, onClose, onRestart }) {
   return (
     <div className="citation-modal__overlay" onClick={onClose}>
       <div
@@ -29,7 +30,10 @@ export default function CitationDetailModal({ label, loading, error, detail, onC
         </h2>
 
         {loading && <p className="citation-modal__status">Loading source text…</p>}
-        {error && <p className="citation-modal__status citation-modal__status--error">{error}</p>}
+        {/* Part 4: App.jsx's handleRestart already clears citationModal
+            along with everything else, so calling onRestart here closes
+            this modal as a side effect — no separate onClose call needed. */}
+        <ErrorNotice error={error} onRestart={onRestart} />
 
         {detail && (
           <>

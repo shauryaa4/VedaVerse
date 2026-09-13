@@ -80,3 +80,13 @@
   margin-left: 8px;
   vertical-align: middle;
 }
+
+@media (max-width: 640px) {
+  .answer-card {
+    padding: 16px 16px;
+  }
+
+  .answer-card__question {
+    font-size: 15px;
+  }
+}
