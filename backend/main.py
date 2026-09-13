@@ -13,6 +13,8 @@ from backend.routes.citation import router as citation_router
 from backend.routes.session import router as session_router
 from backend.routes.intake import router as intake_router
 from backend.routes.classify import router as classify_router
+from backend.routes.tkdl_routes import router as tkdl_routeer
+from backend.routes.abs_routes import router as abs_router
 
 app = FastAPI(title="IP-SAKTI Sahayak API", version="0.1.0")
 
@@ -29,6 +31,8 @@ app.include_router(citation_router)
 app.include_router(session_router)
 app.include_router(intake_router)
 app.include_router(classify_router)
+app.include_router(abs_router)
+app.include_router(tkdl_router)
 
 
 # API-03: catch anything that isn't already an HTTPException, anywhere in
