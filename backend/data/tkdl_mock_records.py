@@ -104,7 +104,11 @@ TKDL_MOCK_RECORDS: list[TKDLRecord] = [
         source_text="Sharangadhara Samhita",
         formulation_type="Churna (powder)",
         knowledge_known_since_years=600,
-        therapeutic_use=["general debility", "stress support", "rasayana (rejuvenation)"],
+        therapeutic_use=[
+            "general debility",
+            "stress support",
+            "rasayana (rejuvenation)",
+        ],
         ingredients=[
             TKDLIngredient(
                 name="Ashwagandha",
@@ -152,7 +156,11 @@ TKDL_MOCK_RECORDS: list[TKDLRecord] = [
         source_text="Charaka Samhita",
         formulation_type="Avaleha (semi-solid confection)",
         knowledge_known_since_years=1500,
-        therapeutic_use=["rasayana (rejuvenation)", "immunity support", "respiratory health"],
+        therapeutic_use=[
+            "rasayana (rejuvenation)",
+            "immunity support",
+            "respiratory health",
+        ],
         ingredients=[
             TKDLIngredient(
                 name="Emblica officinalis",
