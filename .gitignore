@@ -3,3 +3,6 @@
 .pytest_cache/
 chroma_data/
 .env
+node_modules/
+dist/
+.vite/
