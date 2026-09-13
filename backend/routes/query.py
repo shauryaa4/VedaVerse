@@ -27,6 +27,7 @@ from backend.services.citation_cache import store_citation
 from backend.services.pip_session_store import get_session
 from backend.services.vector_store import get_client, get_or_create_collection
 from backend.db.query_log import log_query
+from backend.logic.bhashini_mock import translate_in, translate_out
 
 router = APIRouter()
 
@@ -43,6 +44,29 @@ def _get_collection():
         client = get_client(_PERSIST_DIR)
         _collection = get_or_create_collection(client)
     return _collection
+
+
+def handle_query(pip):  # pip = your frozen Product Intelligence Profile / query object
+    if pip.language != "en":
+        translation_in = translate_in(pip.raw_question, pip.language)
+        question_for_pipeline = translation_in.translated_text
+    else:
+        question_for_pipeline = pip.raw_question
+
+    # ---- existing pipeline runs unchanged ----
+    english_answer = run_existing_pipeline(question_for_pipeline)
+    # -------------------------------------------
+
+    if pip.language != "en":
+        translation_out = translate_out(english_answer.text, pip.language)
+        final_answer_text = translation_out.translated_text
+    else:
+        final_answer_text = english_answer.text
+
+    return {
+        "answer": final_answer_text,
+        "bhashini_mock": True,  # FE uses this to show the "DEMO/MOCK" badge
+    }
 
 
 def _cache_citations(
@@ -119,7 +143,9 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
     if request.session_id is not None:
         pip = get_session(request.session_id)
         if pip is None:
-            raise HTTPException(status_code=404, detail="Unknown session_id. Call POST /session first.")
+            raise HTTPException(
+                status_code=404, detail="Unknown session_id. Call POST /session first."
+            )
     elif request.pip is not None:
         pip = request.pip
     else:
@@ -156,7 +182,7 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
                 citation_support_score,
                 citation_forced_abstain,
                 result,
-           )
+            )
 
         # API-04: log every query for post-demo debugging. Never let a
         # logging failure break the actual response the user is waiting on.
