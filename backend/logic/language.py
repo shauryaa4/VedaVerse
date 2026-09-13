@@ -63,7 +63,17 @@ User question:
 {text}
 """
 
-    response = _get_client().models.generate_content(
+    # IMPORTANT: the client is assigned to a local variable before use,
+    # not chained directly as _get_client().models.generate_content(...).
+    # Chaining it inline gives the freshly-created Client object no strong
+    # reference anywhere -- if the SDK's internal .models wrapper only holds
+    # a WEAK reference back to its parent client, Python's garbage collector
+    # is free to destroy the client mid-request (since nothing else is
+    # keeping it alive), closing its underlying HTTP transport while the
+    # network call is still in flight. This was a live, reproducible bug:
+    # "RuntimeError: Cannot send a request, as the client has been closed."
+    client = _get_client()
+    response = client.models.generate_content(
         model=_GEMINI_MODEL,
         contents=prompt,
     )
@@ -147,7 +157,10 @@ Answer:
 {protected_text}
 """
 
-    response = _get_client().models.generate_content(
+    # See translate_to_english() above for why the client is held in a
+    # local variable here rather than chained inline off _get_client().
+    client = _get_client()
+    response = client.models.generate_content(
         model=_GEMINI_MODEL,
         contents=prompt,
     )

@@ -201,6 +201,6 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
 
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    
+
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
