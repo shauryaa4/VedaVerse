@@ -293,3 +293,73 @@ def test_query_strips_unsupported_citation_end_to_end(monkeypatch):
     assert citation_response.status_code == 200
     assert citation_response.json()["verified"] is False
     
+
+def test_query_translates_hindi_question_and_answer(monkeypatch):
+    from backend.routes import query as query_route
+
+    pip = ProductIntelligenceProfile(
+        jurisdiction="india",
+        objective=["patentability"],
+        product={
+            "classical_basis": "yes",
+            "intended_use": "therapeutic",
+            "novelty": "existing",
+        },
+    )
+
+    chunk = RetrievedChunkRef(
+        chunk_id="IN-1:3(p)",
+        text="Traditional knowledge is excluded from patentability.",
+        source_url=None,
+        doc_id="IN-1",
+        document_name="Patents Act, 1970",
+        section_or_article="3(p)",
+    )
+
+    rag_response = RagResponse(
+        answer_text=(
+            "Traditional knowledge is excluded from patentability "
+            "[IN-1:3(p)]."
+        ),
+        used_chunks=[chunk],
+        retrieval_where_clause=None,
+        abstained=False,
+    )
+
+    monkeypatch.setattr(
+        query_route,
+        "translate_to_english",
+        lambda text, language: "Can traditional knowledge be patented?",
+    )
+
+    captured = {}
+
+    def fake_answer_query(pip, question, collection):
+        captured["question"] = question
+        return rag_response
+
+    monkeypatch.setattr(query_route, "answer_query", fake_answer_query)
+    monkeypatch.setattr(query_route, "_get_collection", lambda: None)
+
+    monkeypatch.setattr(
+        query_route,
+        "translate_from_english",
+        lambda text, language: (
+            "पारंपरिक ज्ञान को पेटेंट नहीं किया जा सकता [IN-1:3(p)]।"
+        ),
+    )
+
+    response = client.post(
+        "/query",
+        json={
+            "pip": pip.model_dump(mode="json"),
+            "question": "क्या पारंपरिक ज्ञान का पेटेंट कराया जा सकता है?",
+            "language": "hi",
+        },
+    )
+
+    assert response.status_code == 200
+    assert captured["question"] == "Can traditional knowledge be patented?"
+    assert response.json()["answer_text"] == (
+        "पारंपरिक ज्ञान को पेटेंट नहीं किया जा सकता [IN-1:3(p)]।"
+    )

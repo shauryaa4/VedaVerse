@@ -27,7 +27,10 @@ from backend.services.citation_cache import store_citation
 from backend.services.pip_session_store import get_session
 from backend.services.vector_store import get_client, get_or_create_collection
 from backend.db.query_log import log_query
-from backend.logic.bhashini_mock import translate_in, translate_out
+from backend.logic.language import (
+    translate_to_english,
+    translate_from_english,
+)
 
 router = APIRouter()
 
@@ -45,28 +48,6 @@ def _get_collection():
         _collection = get_or_create_collection(client)
     return _collection
 
-
-def handle_query(pip):  # pip = your frozen Product Intelligence Profile / query object
-    if pip.language != "en":
-        translation_in = translate_in(pip.raw_question, pip.language)
-        question_for_pipeline = translation_in.translated_text
-    else:
-        question_for_pipeline = pip.raw_question
-
-    # ---- existing pipeline runs unchanged ----
-    english_answer = run_existing_pipeline(question_for_pipeline)
-    # -------------------------------------------
-
-    if pip.language != "en":
-        translation_out = translate_out(english_answer.text, pip.language)
-        final_answer_text = translation_out.translated_text
-    else:
-        final_answer_text = english_answer.text
-
-    return {
-        "answer": final_answer_text,
-        "bhashini_mock": True,  # FE uses this to show the "DEMO/MOCK" badge
-    }
 
 
 def _cache_citations(
@@ -136,6 +117,7 @@ class QueryRequest(BaseModel):
     session_id: str | None = None
     pip: ProductIntelligenceProfile | None = None
     question: str
+    language: str = "en"
 
 
 @router.post("/query", response_model=RagResponse)
@@ -152,9 +134,14 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
         raise HTTPException(status_code=422, detail="Provide either session_id or pip.")
 
     try:
+        english_question = translate_to_english(
+            request.question,
+            request.language,
+        )
+
         result = answer_query(
             pip,
-            request.question,
+            english_question,
             _get_collection(),
         )
 
@@ -184,6 +171,14 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
                 result,
             )
 
+            # LANGUAGE LAYER:
+            # Translation happens only after citation verification and
+            # confidence/abstention processing are complete.
+            result.answer_text = translate_from_english(
+                result.answer_text,
+                request.language,
+            )
+
         # API-04: log every query for post-demo debugging. Never let a
         # logging failure break the actual response the user is waiting on.
         try:
@@ -204,5 +199,8 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
 
         return result
 
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
