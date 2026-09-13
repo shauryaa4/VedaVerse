@@ -6,3 +6,5 @@ chroma_data/
 node_modules/
 dist/
 .vite/
+venv/
+*.tsbuildinfo
