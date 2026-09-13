@@ -5,9 +5,17 @@ import Landing from './screens/Landing.jsx';
 import JurisdictionSelect from './screens/JurisdictionSelect.jsx';
 import Questionnaire from './screens/Questionnaire.jsx';
 import ClassificationResult from './screens/ClassificationResult.jsx';
-import QueryWorkspace from './screens/QueryWorkspace.jsx';
+import Workspace from './screens/Workspace.jsx';
 import CitationDetailModal from './components/CitationDetailModal.jsx';
-import { createSession, submitIntake, classify, askQuestion, getCitation } from './api/client.js';
+import {
+  createSession,
+  submitIntake,
+  classify,
+  askQuestion,
+  getCitation,
+  tkdlSearch,
+  absAssess,
+} from './api/client.js';
 
 /**
  * Owns all real session/PIP state and every backend call in the wizard.
@@ -33,6 +41,13 @@ export default function App() {
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryError, setQueryError] = useState(null);
   const [citationModal, setCitationModal] = useState(null);
+
+  // Part 3 — TKDL Search / ABS Helper tab state. Each is fetched lazily
+  // (`fetched` flips true on first attempt, success or failure, so the
+  // tab doesn't refetch every time it's reopened) and re-fetchable via
+  // each screen's "Re-check" button.
+  const [tkdl, setTkdl] = useState({ data: null, loading: false, error: null, fetched: false });
+  const [abs, setAbs] = useState({ data: null, loading: false, error: null, fetched: false });
 
   const handleStart = async () => {
     setLoading(true);
@@ -78,16 +93,39 @@ export default function App() {
     }
   };
 
-  const handleAskQuestion = async (question) => {
+  const handleAskQuestion = async (question, language = 'en') => {
     setQueryLoading(true);
     setQueryError(null);
     try {
-      const result = await askQuestion(pip.session_id, question);
-      setQueryHistory((prev) => [...prev, { id: `${Date.now()}-${prev.length}`, question, result }]);
+      const result = await askQuestion(pip.session_id, question, language);
+      setQueryHistory((prev) => [
+        ...prev,
+        { id: `${Date.now()}-${prev.length}`, question, result, language },
+      ]);
     } catch (err) {
       setQueryError(err.message);
     } finally {
       setQueryLoading(false);
+    }
+  };
+
+  const handleFetchTkdl = async () => {
+    setTkdl((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await tkdlSearch(pip.session_id);
+      setTkdl({ data, loading: false, error: null, fetched: true });
+    } catch (err) {
+      setTkdl({ data: null, loading: false, error: err.message, fetched: true });
+    }
+  };
+
+  const handleFetchAbs = async () => {
+    setAbs((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await absAssess(pip.session_id);
+      setAbs({ data, loading: false, error: null, fetched: true });
+    } catch (err) {
+      setAbs({ data: null, loading: false, error: err.message, fetched: true });
     }
   };
 
@@ -111,6 +149,8 @@ export default function App() {
     setQueryHistory([]);
     setQueryError(null);
     setCitationModal(null);
+    setTkdl({ data: null, loading: false, error: null, fetched: false });
+    setAbs({ data: null, loading: false, error: null, fetched: false });
   };
 
   return (
@@ -147,14 +187,18 @@ export default function App() {
         )}
 
         {step === 'workspace' && (
-          <QueryWorkspace
+          <Workspace
             pip={pip}
             classification={classification}
-            history={queryHistory}
+            queryHistory={queryHistory}
+            queryLoading={queryLoading}
+            queryError={queryError}
             onAsk={handleAskQuestion}
-            loading={queryLoading}
-            error={queryError}
             onOpenCitation={handleOpenCitation}
+            tkdl={tkdl}
+            onFetchTkdl={handleFetchTkdl}
+            abs={abs}
+            onFetchAbs={handleFetchAbs}
           />
         )}
       </main>

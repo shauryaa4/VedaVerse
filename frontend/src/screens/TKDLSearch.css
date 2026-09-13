@@ -1,0 +1,150 @@
+.tkdl {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 20px 96px;
+}
+
+.tkdl__banner {
+  background: var(--warning-light);
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+}
+
+.tkdl__status {
+  font-size: 14px;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.tkdl__status--error {
+  color: var(--danger);
+}
+
+.tkdl__assessment {
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.tkdl__risk {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.tkdl__risk--high {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.tkdl__risk--medium {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.tkdl__risk--low,
+.tkdl__risk--none {
+  background: var(--herb-light);
+  color: var(--herb-dark);
+}
+
+.tkdl__closest {
+  font-size: 14px;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.tkdl__list {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+
+.tkdl__section {
+  margin-top: 14px;
+}
+
+.tkdl__section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px;
+}
+
+.tkdl__disclaimer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.tkdl__matches-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.tkdl__match {
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.tkdl__match-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+
+.tkdl__match-id {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.tkdl__match-source {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-style: italic;
+  margin: 0 0 8px;
+}
+
+.tkdl__match-overlap {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--turmeric-dim);
+  margin: 0 0 8px;
+}
+
+.tkdl__match-detail {
+  font-size: 12.5px;
+  color: var(--ink);
+  margin: 0 0 4px;
+  line-height: 1.6;
+}
+
+.tkdl__refresh {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+}

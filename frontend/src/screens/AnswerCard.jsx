@@ -16,7 +16,7 @@ import './AnswerCard.css';
  * (owned by App.jsx, wired through the onOpenCitation prop).
  */
 export default function AnswerCard({ turn, onOpenCitation }) {
-  const { question, result } = turn;
+  const { question, result, language } = turn;
   const {
     answer_text: answerText,
     abstained,
@@ -29,7 +29,10 @@ export default function AnswerCard({ turn, onOpenCitation }) {
 
   return (
     <div className="answer-card card">
-      <p className="answer-card__question">{question}</p>
+      <p className="answer-card__question">
+        {question}
+        {language === 'hi' && <span className="answer-card__lang-tag">हिंदी</span>}
+      </p>
 
       <div className="answer-card__meta">
         <ConfidenceBadge confidence={confidence} abstained={abstained} />

@@ -67,3 +67,16 @@
   line-height: 1.6;
   color: var(--warning);
 }
+
+.answer-card__lang-tag {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--turmeric-dim);
+  background: var(--turmeric-light);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}

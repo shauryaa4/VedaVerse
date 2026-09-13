@@ -42,12 +42,22 @@ export default function QueryWorkspace({
   onOpenCitation,
 }) {
   const [question, setQuestion] = useState('');
+  // Part 3 — Hindi toggle. /query already accepts language: "en"|"hi" and
+  // does the actual translation itself (backend/logic/language.py, via
+  // Gemini) — there's no separate "translate my question" step here, just
+  // this parameter passed through onAsk. Labeled honestly per build spec
+  // §12: this is NOT live Bhashini (there's an unmounted, non-functional
+  // backend/routes/bhashini_routes.py in the repo that imports a
+  // backend/logic/bhashini_mock.py that doesn't exist — dead code, not
+  // wired into main.py's routers) — so this is the "translation-assisted"
+  // fallback path, said as such in the UI rather than claiming Bhashini.
+  const [language, setLanguage] = useState('en');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = question.trim();
     if (!trimmed || loading) return;
-    onAsk(trimmed);
+    onAsk(trimmed, language);
     setQuestion('');
   };
 
@@ -87,6 +97,36 @@ export default function QueryWorkspace({
           </div>
         </div>
       )}
+
+      <div className="workspace__language" role="radiogroup" aria-label="Answer language">
+        <label className="workspace__language-option">
+          <input
+            type="radio"
+            name="language"
+            value="en"
+            checked={language === 'en'}
+            onChange={() => setLanguage('en')}
+            disabled={loading}
+          />
+          English
+        </label>
+        <label className="workspace__language-option">
+          <input
+            type="radio"
+            name="language"
+            value="hi"
+            checked={language === 'hi'}
+            onChange={() => setLanguage('hi')}
+            disabled={loading}
+          />
+          हिंदी (Hindi)
+        </label>
+        {language === 'hi' && (
+          <span className="workspace__language-note">
+            Hindi support (translation-assisted) — not live Bhashini.
+          </span>
+        )}
+      </div>
 
       <form className="workspace__form" onSubmit={handleSubmit}>
         <textarea
