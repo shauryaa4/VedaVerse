@@ -227,21 +227,39 @@ def test_build_prompt_switches_to_hindi():
     assert "do not translate" in prompt.lower() or "citation" in prompt.lower()
 
 
-def test_answer_query_passes_pip_language_to_prompt(monkeypatch):
-    """Confirms the wiring end-to-end: pip.language actually reaches the
-    prompt sent to the LLM, not just that _build_prompt itself works."""
+def test_answer_query_always_generates_in_english_regardless_of_pip_language(monkeypatch):
+    """
+    SUPERSEDES the old RAG-06 behavior. A newer, more robust language layer
+    now lives in routes/query.py (backend/logic/language.py): it translates
+    the incoming question to English BEFORE it reaches classify/route/
+    retrieve/generate, and translates only the final, already citation-
+    verified answer back to the user's language AFTER confidence gating --
+    with citation markers specially protected during that translation.
+
+    That design only works if answer_query() ALWAYS generates in English
+    internally. If it also generated directly in Hindi based on pip.language
+    (the old RAG-06 mechanism), the query.py layer would then try to
+    "translate" already-Hindi text as if it were English, producing garbled
+    output. This was a live bug found during pre-deploy review: intake.py
+    sets pip.language from user input, so a real Hindi-language session would
+    have hit this double-translation path.
+
+    generation.py must therefore ignore pip.language entirely and always
+    build the prompt in English -- translation is exclusively query.py's job.
+    """
     fake_results = _fake_chroma_results(
         ["IN-1:3(p)"], ["text"], [{"doc_id": "IN-1", "section_or_article": "3(p)", "source_url": ""}],
     )
     monkeypatch.setattr(generation, "vector_query", lambda *a, **kw: fake_results)
     fake_client = MagicMock()
-    fake_client.models.generate_content.return_value = MagicMock(text="uttar")
+    fake_client.models.generate_content.return_value = MagicMock(text="answer")
     monkeypatch.setattr(generation, "_get_client", lambda: fake_client)
 
     pip = _classical_pip()
-    pip.language = "hi"
+    pip.language = "hi"  # even with this set, generation must stay English-only
 
     answer_query(pip, "question", collection=None)
 
     call_kwargs = fake_client.models.generate_content.call_args.kwargs
-    assert "Hindi" in call_kwargs["contents"]
+    assert "Write your answer in English." in call_kwargs["contents"]
+    assert "Hindi" not in call_kwargs["contents"]

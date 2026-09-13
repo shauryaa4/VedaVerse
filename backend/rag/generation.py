@@ -205,7 +205,7 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
             status_notes=routing.status_notes,
         )
 
-    prompt = _build_prompt(question, used_chunks, language=pip.language)
+    prompt = _build_prompt(question, used_chunks, language="en")
     client = _get_client()
     response = client.models.generate_content(model=_GEMINI_MODEL, contents=prompt)
     answer_text = response.text or ""
