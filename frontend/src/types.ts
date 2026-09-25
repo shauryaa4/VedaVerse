@@ -63,6 +63,68 @@ export interface Classification {
   unresolved_flags?: string[]
 }
 
+export interface ABSFactProfileInput {
+  applicant?: {
+    entity_category?: string
+    applicant_type?: string
+    nationality?: string
+    incorporation_country?: string
+    foreign_participation_or_control?: boolean
+  }
+  resource?: {
+    biological_resource_involved?: boolean
+    resource_name?: string
+    scientific_name?: string
+    resource_type?: string
+    resource_part?: string
+    quantity?: number
+    unit?: string
+    country_of_origin?: string
+    origin_status?: string
+    geographical_location?: string
+  }
+  access?: {
+    access_method?: string
+    source_type?: string
+    cultivated?: boolean
+    wild_collected?: boolean
+    artificially_propagated?: boolean
+    market_or_trader?: boolean
+    supplier?: string
+    community?: string
+    institution?: string
+  }
+  tk?: {
+    associated_traditional_knowledge?: boolean
+    tk_type?: string
+    tk_source?: string
+    tk_codified?: boolean
+    tk_community_based?: boolean
+  }
+  activity?: {
+    activities?: string[]
+  }
+  ipr?: {
+    ipr_stage?: string
+    ipr_type?: string
+    jurisdiction_filed?: string
+  }
+  certificate_of_origin?: {
+    certificate_required?: boolean
+    certificate_available?: boolean
+    certificate_status?: string
+    issuing_authority?: string
+    note?: string
+  }
+  transfer?: {
+    transfer_involved?: boolean
+    transfer_type?: string
+    transferee_type?: string
+    transferee_country?: string
+  }
+  annual_turnover_inr?: number
+}
+
 export interface Session {
   session_id: string
   jurisdiction: Jurisdiction | null
@@ -82,6 +144,7 @@ export interface Session {
   protection_target: ProtectionTarget | null
   objective: Objective[]
   classification: Classification | null
+  abs_facts?: ABSFactProfileInput | null
 }
 
 export type AnswerConfidence = 'high' | 'medium' | 'low' | 'abstain'
@@ -99,7 +162,7 @@ export interface AskResponse {
   abstained: boolean
 }
 
-// --- API response types (matching real backend contracts) ---
+// --- API response types ---
 
 export interface TKDLIngredient {
   name: string
@@ -138,13 +201,116 @@ export interface TKDLSearchResponse {
 }
 
 export type ABSRelevance = 'likely' | 'possible' | 'unlikely' | 'not_applicable'
+export type ABSStatus = 'STRONG' | 'CONDITIONAL' | 'INSUFFICIENT_INFORMATION' | 'CONFLICTING' | 'ESCALATION_RECOMMENDED'
+
+export interface ABSTriggeredRule {
+  rule_id: string
+  rule_name: string
+  section_or_rule: string
+  description: string
+  authority: string
+  required_form?: string | null
+  source_doc_id: string
+  source_provision: string
+}
+
+export interface ABSExemptionCheck {
+  exemption_id: string
+  name: string
+  source_provision: string
+  conditions_checked?: Record<string, any>
+  is_triggered: boolean
+  reason: string
+  source_doc_id: string
+}
+
+export interface ABSFormRequirement {
+  form_id: string
+  form_name: string
+  purpose: string
+  authority: string
+  fee: string
+  required_documents: string[]
+  source_doc_id: string
+}
+
+export interface ABSAuthorityRouting {
+  authority_name: string
+  authority_level: string
+  jurisdiction_scope: string
+  reasons: string[]
+  status: string
+}
+
+export interface BenefitSharingProfile {
+  applicable: boolean
+  basis?: string | null
+  benefit_type?: string | null
+  turnover_inr?: number | null
+  turnover_band?: string | null
+  rate_or_slab?: string | null
+  indicative_amount_inr?: number | null
+  special_condition?: string | null
+  calculation_status: string
+  disclaimer: string
+  source?: string | null
+}
+
+export interface CertificateOfOriginProfile {
+  certificate_required: boolean
+  certificate_available: boolean
+  certificate_status: 'REQUIRED' | 'PROVIDED' | 'MISSING' | 'NOT_APPLICABLE'
+  issuing_authority?: string | null
+  note?: string | null
+}
+
+export interface ABSCitation {
+  doc_id: string
+  document_name: string
+  document_type: string
+  section_or_article: string
+  excerpt: string
+  source_url?: string | null
+  verification_status: 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'UNVERIFIED' | 'CONFLICTING'
+}
+
+export interface ABSMissingInfo {
+  field_name: string
+  prompt_question: string
+  impact_description: string
+  why_it_matters: string
+}
+
+export interface ABSHumanEscalation {
+  human_review: boolean
+  reason?: string | null
+  missing_information?: string[]
+  case_summary?: string | null
+  triggered_rules?: string[]
+  sources?: string[]
+}
 
 export interface ABSAssessResponse {
+  status?: ABSStatus
+  pathway?: string
   relevance: ABSRelevance
   reasoning: string[]
   applicable_authority_guidance: string[]
   ip_filing_flag: boolean
-  ip_filing_note: string | null
+  ip_filing_note?: string | null
+  facts_considered?: Record<string, any>
+  triggered_rules?: ABSTriggeredRule[]
+  exemptions_evaluated?: ABSExemptionCheck[]
+  authority_routing?: ABSAuthorityRouting
+  form_requirements?: ABSFormRequirement[]
+  benefit_sharing?: BenefitSharingProfile
+  certificate_of_origin?: CertificateOfOriginProfile
+  citations?: ABSCitation[]
+  missing_information?: ABSMissingInfo[]
+  next_actions?: string[]
+  human_escalation?: ABSHumanEscalation
+  abstained?: boolean
+  abstain_reason?: string | null
   disclaimer: string
 }
 

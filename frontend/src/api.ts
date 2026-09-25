@@ -70,6 +70,6 @@ export async function tkdlSearchAPI(sessionId: string): Promise<TKDLSearchRespon
   return postJSON<TKDLSearchResponse>('/tkdl/search', { session_id: sessionId })
 }
 
-export async function absAssessAPI(sessionId: string): Promise<ABSAssessResponse> {
-  return postJSON<ABSAssessResponse>('/abs/assess', { session_id: sessionId })
+export async function absAssessAPI(sessionId: string, absFacts?: unknown): Promise<ABSAssessResponse> {
+  return postJSON<ABSAssessResponse>('/abs/assess', { session_id: sessionId, abs_facts: absFacts })
 }
