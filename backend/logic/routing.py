@@ -85,7 +85,7 @@ class RoutingResult(BaseModel):
 _INDIA_ROWS: list[tuple[str, Objective, list[RegimeSpec], str]] = [
     ("classical_generic", "patentability",
      [("patent_law", ["act"]), ("biodiversity_abs", None)],
-     "India + Classical/Generic + patentability -> Patents Act s.3(p) ONLY (not Rules), Biological Diversity Act, TKDL mock"),
+     "India + Classical/Generic + patentability -> Patents Act s.3(p) ONLY (not Rules), Biological Diversity Act, TKDL archive search"),
 
     ("proprietary", "patentability",
      [("patent_law", None), ("biodiversity_abs", None)],

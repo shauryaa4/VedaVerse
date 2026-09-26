@@ -2,8 +2,8 @@
 TKDL-02 — Deterministic TKDL search + prior-art comparison engine.
 
 Implements the reasoning from the team's TKDL research notes as a RULE
-ENGINE, not an LLM call and not ML similarity — same "deterministic,
-first-match-wins, explain the rule that fired" philosophy as CLS-01
+ENGINE, not an LLM call and not ML similarity — deterministic best-overlap
+scoring with an explanation of the rules that fired, like CLS-01
 (backend/logic/classification.py) and ROUTE-01 (backend/logic/routing.py).
 Never present this module's output as an LLM guess, and never collapse it
 into "ingredients found in TKDL -> patent rejected" — see assess_prior_art()
@@ -27,15 +27,15 @@ the nuance the research notes insist on.
 
 MATCHING METHOD: token-overlap on normalised ingredient identifiers (name +
 scientific_name + traditional_name), stopword-filtered. This is intentionally
-simple and deterministic — good enough to demo the CONCEPT of TKDL-based
-prior art search against a ~6-record mock dataset. It is NOT a fuzzy-matching
+simple and deterministic — an explainable baseline for TKDL-based prior-art
+search against the offline source archive. It is NOT a fuzzy-matching
 or embedding-based system; do not oversell its matching quality past
-"same rule-based standard as the rest of the app" in the demo script.
+"same rule-based standard as the rest of the app."
 """
 
 import re
 
-from backend.data.tkdl_mock_records import TKDL_MOCK_RECORDS
+from backend.data.tkdl_real_records import TKDL_REAL_RECORDS
 from backend.models.classification_input import CompositionItem
 from backend.models.pip import ProductIntelligenceProfile
 from backend.models.tkdl import PriorArtAssessment, TKDLIngredient, TKDLMatchResult, TKDLRecord
@@ -124,8 +124,8 @@ def _compare_to_record(
 
 def search_tkdl(composition: list[CompositionItem]) -> list[TKDLMatchResult]:
     """
-    Compare a submitted composition against every record in the mock TKDL
-    dataset. Returns only records with at least one matched ingredient,
+    Compare a submitted composition against every real record in the saved
+    TKDL archive. Returns only records with at least one matched ingredient,
     sorted by overlap_ratio descending (best match first), ties broken by
     matched-ingredient count descending.
 
@@ -136,7 +136,7 @@ def search_tkdl(composition: list[CompositionItem]) -> list[TKDLMatchResult]:
     if not composition:
         return []
 
-    results = [_compare_to_record(composition, record) for record in TKDL_MOCK_RECORDS]
+    results = [_compare_to_record(composition, record) for record in TKDL_REAL_RECORDS]
     results = [r for r in results if r.matched_ingredient_names]
     results.sort(key=lambda r: (r.overlap_ratio, len(r.matched_ingredient_names)), reverse=True)
     return results
@@ -150,7 +150,7 @@ def assess_prior_art(
     the Case 1 / Case 2 / Case 3 reasoning in the research notes.
 
     Thresholds are intentionally coarse and named in the reasoning text
-    (not hidden) — this is a demo heuristic over a 6-record mock dataset,
+    (not hidden) — this is a coarse heuristic over an offline source archive,
     not a calibrated legal determination. Per build spec section 17, this
     NEVER produces a numeric probability; only HIGH/MEDIUM/LOW/NONE.
     """
@@ -158,9 +158,9 @@ def assess_prior_art(
         return PriorArtAssessment(
             risk_level="none",
             reasoning=[
-                "No record in the mock TKDL sample dataset shares any ingredient with "
+                "No record in the offline TKDL archive shares any ingredient with "
                 "this composition. This does not mean no real-world prior art exists — "
-                "it means none was found in this small demo dataset."
+                "it means none was found in this offline source archive."
             ],
         )
 
@@ -176,7 +176,18 @@ def assess_prior_art(
         if record.therapeutic_use
         else "No therapeutic use recorded for this entry."
     )
-    what_known.append(f"Knowledge known since approximately {record.knowledge_known_since_years} years ({record.source_text}).")
+    record_details = []
+    if record.source_text:
+        record_details.append(f"Source: {record.source_text}")
+    if record.knowledge_known_since_years is not None:
+        record_details.append(
+            f"Knowledge known since approximately {record.knowledge_known_since_years} years"
+        )
+    what_known.append(
+        "; ".join(record_details) + "."
+        if record_details
+        else "No source citation or known-since date was captured for this entry."
+    )
 
     what_different: list[str] = []
     if best.extra_user_ingredient_names:
@@ -205,7 +216,7 @@ def assess_prior_art(
     if best.extra_user_ingredient_names:
         potential_novel.append(
             "The additional ingredient(s) above could be an obvious addition or a genuine "
-            "technical improvement — this mock tool cannot distinguish the two."
+            "technical improvement — ingredient matching cannot distinguish the two."
         )
     if not potential_novel:
         potential_novel.append(
@@ -240,10 +251,11 @@ def assess_prior_art(
             "consider it alongside any other closely-related records above."
         )
 
-    reasoning.append(
-        f"Closest record: {record.record_id} — {record.formulation_name} "
-        f"({record.source_text}, known since ~{record.knowledge_known_since_years} years)."
-    )
+    record_details = [record.source_text] if record.source_text else []
+    if record.knowledge_known_since_years is not None:
+        record_details.append(f"known since ~{record.knowledge_known_since_years} years")
+    descriptor = f" ({'; '.join(record_details)})" if record_details else ""
+    reasoning.append(f"Closest record: {record.record_id} — {record.formulation_name}{descriptor}.")
 
     return PriorArtAssessment(
         risk_level=risk,
