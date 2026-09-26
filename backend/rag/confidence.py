@@ -24,6 +24,8 @@ Inputs consumed (all already real, nothing here invents a new signal):
   - the should_abstain flag from strip_unsupported_sentences() (CITE-06)
   - RagResponse.status_notes  (routing.py's status_notes, surfaced through
     RAG-03's contract as of this task -- see generation.py)
+  - len(RagResponse.used_chunks)  (RAG-03 -- number of independent
+    retrieved sources actually used in the answer)
 """
 
 from typing import Literal, Optional
@@ -175,6 +177,42 @@ def apply_confidence_decision(
 
 
 # ---------------------------------------------------------------------------
+# Numeric confidence score -- added after pitch-round feedback: show
+# confidence mathematically, not just as a badge. Independent of the
+# level/badge logic above -- doesn't replace or influence it, just adds a
+# transparent number alongside it.
+# ---------------------------------------------------------------------------
+
+
+def compute_confidence_score(
+    classification_confidence: Optional[Confidence],
+    citation_support_score: float,
+    source_count: int,
+) -> float:
+    """
+    Weighted sum of three real signals, each independently meaningful:
+      - 50%: citation_support_score -- fraction of the answer's claims that
+        actually verified against retrieved legal text (CITE-05).
+      - 30%: classification_confidence -- how certain the deterministic rule
+        engine (CLS-01) was about the product category.
+      - 20%: source_count -- how many independent retrieved chunks the answer
+        drew from; 2+ counts as full credit.
+    """
+    confidence_anchor = {"high": 1.0, "medium": 0.6, "low": 0.3}
+    classification_component = confidence_anchor.get(
+        classification_confidence or "low", 0.3
+    )
+    source_component = min(source_count / 2, 1.0)
+
+    score = (
+        0.5 * citation_support_score
+        + 0.3 * classification_component
+        + 0.2 * source_component
+    )
+    return round(score, 2)
+
+
+# ---------------------------------------------------------------------------
 # CONF-05 -- integration entrypoint (called from routes/query.py)
 # ---------------------------------------------------------------------------
 
@@ -197,4 +235,12 @@ def evaluate_confidence(
         citation_forced_abstain,
         rag_response.status_notes,
     )
-    return apply_confidence_decision(rag_response, decision, level, reason)
+    rag_response = apply_confidence_decision(rag_response, decision, level, reason)
+
+    rag_response.confidence_score = compute_confidence_score(
+        classification_confidence,
+        citation_support_score,
+        len(rag_response.used_chunks),
+    )
+
+    return rag_response

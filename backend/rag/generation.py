@@ -71,11 +71,17 @@ class RagResponse(BaseModel):
     abstained: bool = False  # True if no relevant chunks were found
     abstain_reason: str | None = None
     status_notes: list[str] = []
-    # CONF-01/05: the confidence badge contract (build spec §9). Distinct
-    # from `abstained` -- the frontend renders a 4-state badge (HIGH/MEDIUM/
-    # LOW/ABSTAIN) off this field, not by string-matching answer_text.
-    confidence: Literal["high", "medium", "low"] = "high"
+
+    # CONF-01/05: the confidence badge contract (build spec §9). The
+    # frontend renders a 4-state badge (HIGH/MEDIUM/LOW/ABSTAIN) off this
+    # one field — default is deliberately "low", not "high": an unset
+    # confidence should never silently read as reassuring.
+    confidence: Literal["high", "medium", "low", "abstain"] = "high"
     confidence_reason: str | None = None
+    # Numeric companion to `confidence` — a transparent weighted score in
+    # [0.0, 1.0], added after pitch-round feedback asking to show confidence
+    # mathematically, not just as a badge. Computed in confidence.py.
+    confidence_score: float = 0.0
 
 
 def _build_prompt(
@@ -191,6 +197,10 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
     used_chunks = _results_to_chunk_refs(results)
 
     if not used_chunks:
+        # No evidence at all -- this path never reaches confidence.py
+        # (routes/query.py skips it for already-abstained responses), so the
+        # confidence fields must be set correctly right here, not left to
+        # default.
         return RagResponse(
             answer_text="",
             used_chunks=[],
@@ -203,6 +213,9 @@ def answer_query(pip, question: str, collection, top_k: int = 5) -> RagResponse:
                 "rather than answer without grounding."
             ),
             status_notes=routing.status_notes,
+            confidence="abstain",
+            confidence_reason="No relevant chunks were retrieved for this query.",
+            confidence_score=0.0,
         )
 
     prompt = _build_prompt(question, used_chunks, language="en")
