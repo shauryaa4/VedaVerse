@@ -1,4 +1,5 @@
 import ErrorNotice from './ErrorNotice.jsx';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 import './CitationDetailModal.css';
 
 /**
@@ -14,7 +15,10 @@ import './CitationDetailModal.css';
  * for this session), this still shows the citation label and the error,
  * rather than leaving a blank modal.
  */
-export default function CitationDetailModal({ label, loading, error, detail, onClose, onRestart }) {
+export default function CitationDetailModal({ label, loading, error, detail, onClose, onRestart, currentLang = 'en' }) {
+  const uiText = useTranslatedTexts([
+    'Citation', 'Loading source text…', 'Verified ✓', 'Not fully supported', 'Close',
+  ], currentLang);
   return (
     <div className="citation-modal__overlay" onClick={onClose}>
       <div
@@ -24,16 +28,16 @@ export default function CitationDetailModal({ label, loading, error, detail, onC
         aria-labelledby="citation-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="citation-modal__eyebrow">Citation</p>
+        <p className="citation-modal__eyebrow">{uiText('Citation')}</p>
         <h2 id="citation-modal-title" className="citation-modal__title">
           {label}
         </h2>
 
-        {loading && <p className="citation-modal__status">Loading source text…</p>}
+        {loading && <p className="citation-modal__status">{uiText('Loading source text…')}</p>}
         {/* Part 4: App.jsx's handleRestart already clears citationModal
             along with everything else, so calling onRestart here closes
             this modal as a side effect — no separate onClose call needed. */}
-        <ErrorNotice error={error} onRestart={onRestart} />
+        <ErrorNotice error={error} onRestart={onRestart} currentLang={currentLang} />
 
         {detail && (
           <>
@@ -49,14 +53,14 @@ export default function CitationDetailModal({ label, loading, error, detail, onC
                   : 'citation-modal__badge--unverified')
               }
             >
-              {detail.verified ? 'Verified \u2713' : 'Not fully supported'}
+              {detail.verified ? uiText('Verified ✓') : uiText('Not fully supported')}
             </span>
             <blockquote className="citation-modal__excerpt">{detail.excerpt_text}</blockquote>
           </>
         )}
 
         <button type="button" className="citation-modal__close" onClick={onClose}>
-          Close
+          {uiText('Close')}
         </button>
       </div>
     </div>

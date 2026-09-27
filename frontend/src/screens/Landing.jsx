@@ -1,36 +1,35 @@
 import ErrorNotice from '../components/ErrorNotice.jsx';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 import './Landing.css';
 
-/**
- * FE-01. "Get started" is what actually triggers real session creation
- * (POST /session) in App.jsx's handleStart — nothing here talks to the API
- * directly, this screen is presentation only.
- */
-export default function Landing({ onStart, loading, error }) {
+export default function Landing({ onStart, loading, error, currentLang = 'en' }) {
+  const uiText = useTranslatedTexts([
+    'Know how the law treats your Ayurvedic product — before you file anything.',
+    'Classical formulation or new combination? India or international? Patent, trademark, or regulatory pathway? Answer a few questions and get a grounded, citation-backed answer — with a confidence score, and an honest "we don\'t know" when the corpus doesn\'t cover it.',
+    'Formulation-aware classification, not a generic chatbot guess',
+    'Every claim traces back to an actual statute, rule, or treaty section',
+    'India and international answers are kept in separate, labelled lanes',
+    'Try again', 'Starting session…', 'Start Assessment',
+    'This tool provides information, not legal advice.',
+  ], currentLang);
   return (
     <div className="landing">
       <div className="landing__card card">
         <p className="landing__eyebrow">AIIA · Ministry of AYUSH · SIH 26045</p>
         <h1 className="landing__title">
-          Know how the law treats your Ayurvedic product — before you file anything.
+          {uiText('Know how the law treats your Ayurvedic product — before you file anything.')}
         </h1>
         <p className="landing__body">
-          Classical formulation or new combination? India or international? Patent,
-          trademark, or regulatory pathway? Answer a few questions and get a
-          grounded, citation-backed answer — with a confidence score, and an
-          honest "we don't know" when the corpus doesn't cover it.
+          {uiText('Classical formulation or new combination? India or international? Patent, trademark, or regulatory pathway? Answer a few questions and get a grounded, citation-backed answer — with a confidence score, and an honest "we don\'t know" when the corpus doesn\'t cover it.')}
         </p>
 
         <ul className="landing__points">
-          <li>Formulation-aware classification, not a generic chatbot guess</li>
-          <li>Every claim traces back to an actual statute, rule, or treaty section</li>
-          <li>India and international answers are kept in separate, labelled lanes</li>
+          <li>{uiText('Formulation-aware classification, not a generic chatbot guess')}</li>
+          <li>{uiText('Every claim traces back to an actual statute, rule, or treaty section')}</li>
+          <li>{uiText('India and international answers are kept in separate, labelled lanes')}</li>
         </ul>
 
-        {/* Part 4: no session exists yet at this screen, so there's nothing
-            to "restart" from — the only sensible recovery is retrying
-            session creation itself. */}
-        <ErrorNotice error={error} onRetry={onStart} retryLabel="Try again" />
+        <ErrorNotice error={error} onRetry={onStart} retryLabel={uiText('Try again')} currentLang={currentLang} />
 
         <button
           type="button"
@@ -38,11 +37,11 @@ export default function Landing({ onStart, loading, error }) {
           onClick={onStart}
           disabled={loading}
         >
-          {loading ? 'Starting session…' : 'Get started'}
+          {loading ? uiText('Starting session…') : uiText('Start Assessment')}
         </button>
 
         <p className="landing__disclaimer">
-          This tool provides information, not legal advice.
+          {uiText('This tool provides information, not legal advice.')}
         </p>
       </div>
     </div>

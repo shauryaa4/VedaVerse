@@ -2,19 +2,9 @@ import { useState } from 'react';
 import QueryWorkspace from './QueryWorkspace.jsx';
 import TKDLSearch from './TKDLSearch.jsx';
 import ABSHelper from './ABSHelper.jsx';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 import './Workspace.css';
 
-/**
- * Part 3 — tab container for the three "workspace" screens (build spec §15
- * items 5/8/9: Query/Answer, TKDL Search, ABS Helper). Sits inside the
- * wizard's existing 'workspace' step — AppHeader's stepper still just
- * shows "Ask & Explore" as one step; these are sub-navigation within it,
- * not new top-level wizard steps.
- *
- * Purely a tab switcher: every backend-touching prop is passed straight
- * through to the three real screens, same pattern as everywhere else —
- * this file itself never calls api/client.js.
- */
 const TABS = [
   { key: 'query', label: 'Ask & Explore' },
   { key: 'tkdl', label: 'TKDL Search' },
@@ -28,30 +18,33 @@ export default function Workspace({
   queryLoading,
   queryError,
   onAsk,
+  onAddTurn,
   onOpenCitation,
   tkdl,
   onFetchTkdl,
   abs,
   onFetchAbs,
   onRestart,
+  currentLang = 'en',
 }) {
   const [tab, setTab] = useState('query');
+  const uiText = useTranslatedTexts(TABS.map((item) => item.label), currentLang);
 
   return (
     <div className="workspace-shell">
       <div className="workspace-shell__tabs" role="tablist">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            key={t.key}
+            key={tb.key}
             type="button"
             role="tab"
-            aria-selected={tab === t.key}
+            aria-selected={tab === tb.key}
             className={
-              'workspace-shell__tab' + (tab === t.key ? ' workspace-shell__tab--active' : '')
+              'workspace-shell__tab' + (tab === tb.key ? ' workspace-shell__tab--active' : '')
             }
-            onClick={() => setTab(t.key)}
+            onClick={() => setTab(tb.key)}
           >
-            {t.label}
+            {uiText(tb.label)}
           </button>
         ))}
       </div>
@@ -60,18 +53,35 @@ export default function Workspace({
         <QueryWorkspace
           pip={pip}
           classification={classification}
-          history={queryHistory}
+          history={Array.isArray(queryHistory) ? queryHistory : []}
           onAsk={onAsk}
+          onAddTurn={onAddTurn}
           loading={queryLoading}
           error={queryError}
           onOpenCitation={onOpenCitation}
           onRestart={onRestart}
+          currentLang={currentLang}
         />
       )}
 
-      {tab === 'tkdl' && <TKDLSearch state={tkdl} onFetch={onFetchTkdl} onRestart={onRestart} />}
+      {tab === 'tkdl' && (
+        <TKDLSearch
+          state={tkdl}
+          onFetch={onFetchTkdl}
+          onRestart={onRestart}
+          currentLang={currentLang}
+        />
+      )}
 
-      {tab === 'abs' && <ABSHelper state={abs} onFetch={onFetchAbs} onRestart={onRestart} />}
+      {tab === 'abs' && (
+        <ABSHelper
+          state={abs}
+          onFetch={onFetchAbs}
+          onRestart={onRestart}
+          currentLang={currentLang}
+        />
+      )}
+
     </div>
   );
 }

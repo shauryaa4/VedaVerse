@@ -3,16 +3,65 @@
   margin-bottom: 16px;
 }
 
+.answer-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .answer-card__question {
   font-family: var(--font-serif);
   font-size: 16px;
   font-weight: 600;
   color: var(--ink);
-  margin: 0 0 12px;
+  margin: 0;
 }
+
+.answer-card__voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--paper-warm, #f8f6f0);
+  border: 1px solid var(--herb, #2e6f40);
+  color: var(--herb-dark, #1c4929);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.answer-card__voice-btn:hover {
+  background: var(--herb, #2e6f40);
+  color: var(--paper, #fff);
+}
+
+.answer-card__voice-btn--playing {
+  background: var(--herb, #2e6f40);
+  color: var(--paper, #fff);
+  animation: pulse-voice 1.5s infinite;
+}
+
+@keyframes pulse-voice {
+  0% { opacity: 1; }
+  50% { opacity: 0.75; }
+  100% { opacity: 1; }
+}
+
 
 .answer-card__meta {
   margin-bottom: 14px;
+}
+
+.answer-card__playback-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--warning);
 }
 
 .answer-card__text {

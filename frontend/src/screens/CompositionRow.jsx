@@ -1,22 +1,18 @@
 import { COMMON_INGREDIENTS } from '../data/options.js';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 
-/**
- * Ingredient autocomplete uses a native <datalist> rather than a custom
- * dropdown. This is a deliberate choice, not a shortcut: a custom
- * suggestion list that opens `onFocus` (before the user has typed anything)
- * is exactly the bug the previous bolt.new build hit — the browser's native
- * datalist only ever shows suggestions once there's something to filter on,
- * so that whole bug class doesn't exist here.
- */
-export default function CompositionRow({ row, onChange, onRemove, canRemove }) {
+export default function CompositionRow({ row, onChange, onRemove, canRemove, currentLang = 'en' }) {
   const update = (field, value) => onChange({ ...row, [field]: value });
+  const uiText = useTranslatedTexts([
+    'Ingredient (e.g. Ashwagandha extract)', 'Qty', 'Unit (mg, %, ...)', 'Active', 'Remove ingredient',
+  ], currentLang);
 
   return (
     <div className="composition-row">
       <input
         type="text"
         className="composition-row__ingredient"
-        placeholder="Ingredient (e.g. Ashwagandha extract)"
+        placeholder={uiText('Ingredient (e.g. Ashwagandha extract)')}
         value={row.ingredient}
         onChange={(e) => update('ingredient', e.target.value)}
         list="common-ingredients"
@@ -24,14 +20,14 @@ export default function CompositionRow({ row, onChange, onRemove, canRemove }) {
       <input
         type="text"
         className="composition-row__quantity"
-        placeholder="Qty"
+        placeholder={uiText('Qty')}
         value={row.quantity}
         onChange={(e) => update('quantity', e.target.value)}
       />
       <input
         type="text"
         className="composition-row__unit"
-        placeholder="Unit (mg, %, ...)"
+        placeholder={uiText('Unit (mg, %, ...)')}
         value={row.unit}
         onChange={(e) => update('unit', e.target.value)}
       />
@@ -41,15 +37,15 @@ export default function CompositionRow({ row, onChange, onRemove, canRemove }) {
           checked={row.is_active}
           onChange={(e) => update('is_active', e.target.checked)}
         />
-        Active
+        {uiText('Active')}
       </label>
       <button
         type="button"
         className="composition-row__remove"
         onClick={onRemove}
         disabled={!canRemove}
-        aria-label="Remove ingredient"
-        title="Remove ingredient"
+        aria-label={uiText('Remove ingredient')}
+        title={uiText('Remove ingredient')}
       >
         ×
       </button>

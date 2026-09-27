@@ -58,6 +58,12 @@
   color: var(--ink-muted);
 }
 
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .app-header__jurisdiction {
   font-family: var(--font-sans);
   font-size: 12.5px;
@@ -76,6 +82,38 @@
   background: var(--turmeric-light);
   color: var(--turmeric-dim);
 }
+
+.app-header__lang-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--paper-warm, #f8f6f0);
+  border: 1px solid var(--border, #e2ded4);
+  border-radius: 8px;
+  padding: 4px 10px;
+  transition: all 0.2s ease;
+}
+
+.app-header__lang-picker:hover {
+  border-color: var(--herb, #2e6f40);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.app-header__lang-icon {
+  font-size: 14px;
+}
+
+.app-header__lang-select {
+  background: transparent;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink, #1f2421);
+  cursor: pointer;
+  outline: none;
+}
+
 
 .app-header__steps {
   display: flex;

@@ -105,3 +105,65 @@ export function getCitation(sessionId, docId, section) {
 export function checkHealth() {
   return request('/health');
 }
+
+/** POST /bhashini/translate -> {original_text, translated_text, source_lang, target_lang} */
+export function translateText(text, targetLang, sourceLang = null) {
+  return request('/bhashini/translate', {
+    method: 'POST',
+    body: JSON.stringify({ text, lang: targetLang, source_lang: sourceLang }),
+  });
+}
+
+/** POST /bhashini/translate_batch -> {translations: string[]} */
+export function translateBatch(texts, targetLang, sourceLang = 'en') {
+  return request('/bhashini/translate_batch', {
+    method: 'POST',
+    body: JSON.stringify({ texts, target_lang: targetLang, source_lang: sourceLang }),
+  });
+}
+
+/** POST /voice/transcribe -> {text, language} */
+export async function transcribeVoice(audioFile, language = null) {
+  const formData = new FormData();
+  formData.append('audio', audioFile);
+  if (language) formData.append('language', language);
+
+  const res = await fetch(`${BASE}/voice/transcribe`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || 'Voice transcription failed.');
+  }
+  return res.json();
+}
+
+/** POST /voice/tts -> {audio_base64, language} */
+export function generateTTS(text, language = 'hi') {
+  return request('/voice/tts', {
+    method: 'POST',
+    body: JSON.stringify({ text, language }),
+  });
+}
+
+/** POST /voice/chat -> {transcript, detected_language, english_question, result, audio_base64} */
+export async function sendVoiceChat(sessionId, audioBlob, language = null) {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'speech.wav');
+  formData.append('session_id', sessionId);
+  if (language) formData.append('language', language);
+
+  const res = await fetch(`${BASE}/voice/chat`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || 'Voice chat processing failed.');
+  }
+  return res.json();
+}
+

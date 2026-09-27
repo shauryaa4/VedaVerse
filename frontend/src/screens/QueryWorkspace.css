@@ -116,27 +116,201 @@
   padding: 24px 0;
 }
 
-.workspace__language {
+.workspace__mode-toggle {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
-  font-size: 13.5px;
-  color: var(--ink);
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
 }
 
-.workspace__language-option {
-  display: inline-flex;
+.workspace__mode-btn {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspace__mode-btn:hover {
+  color: var(--ink);
+  background: var(--paper-warm, #f8f6f0);
+}
+
+.workspace__mode-btn--active {
+  color: var(--herb-dark, #1c4929);
+  background: var(--herb-light, #e8f4ec);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.workspace__voice-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 24px;
+  background: var(--paper-warm, #faf8f5);
+  border: 1px solid var(--border, #e2ded4);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.workspace__voice-status {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
+}
+
+.workspace__voice-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--turmeric-dim, #8f5e00);
+  background: var(--turmeric-light, #fef5e6);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.workspace__voice-message {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.workspace__voice-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.workspace__mic-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--herb, #2e6f40);
+  color: var(--paper, #fff);
+  border: 4px solid var(--herb-light, #e8f4ec);
+  box-shadow: 0 6px 20px rgba(46, 111, 64, 0.25);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.workspace__mic-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 26px rgba(46, 111, 64, 0.35);
+}
+
+.workspace__mic-btn--recording {
+  background: var(--danger, #d9381e);
+  border-color: #fce8e6;
+  box-shadow: 0 6px 24px rgba(217, 56, 30, 0.4);
+  animation: mic-pulse-ring 1.5s infinite;
+}
+
+@keyframes mic-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(217, 56, 30, 0.5); }
+  70% { box-shadow: 0 0 0 18px rgba(217, 56, 30, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 56, 30, 0); }
+}
+
+.workspace__mic-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.workspace__mic-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workspace__voice-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.workspace__voice-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.workspace__review-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.workspace__review-input {
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e2ded4);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.workspace__review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.workspace__btn-primary {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--paper, #fff);
+  background: var(--herb, #2e6f40);
+  border: 1px solid var(--herb-dark, #1c4929);
+  border-radius: 8px;
+  padding: 8px 18px;
   cursor: pointer;
 }
 
-.workspace__language-note {
-  font-size: 12px;
-  color: var(--ink-muted);
-  font-style: italic;
+.workspace__btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
+
+.workspace__btn-secondary {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink, #1f2421);
+  background: var(--paper-warm, #f8f6f0);
+  border: 1px solid var(--border, #e2ded4);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.workspace__btn-secondary:hover {
+  background: var(--border, #e2ded4);
+}
+
+
 
 @media (max-width: 640px) {
   .workspace {

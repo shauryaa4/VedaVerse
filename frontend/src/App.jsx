@@ -17,45 +17,22 @@ import {
   absAssess,
 } from './api/client.js';
 
-/**
- * Owns all real session/PIP state and every backend call in the wizard.
- * Screens are presentation + local form state only — they call the
- * on* callbacks here, which are the only things that touch api/client.js.
- * This keeps the wiring in one place, which matters once Part 2 adds the
- * query/answer loop and Part 3 adds TKDL/ABS on top of the same pip state.
- */
 export default function App() {
   const [step, setStep] = useState('landing'); // landing | jurisdiction | questionnaire | classification | workspace
   const [pip, setPip] = useState(null);
   const [classification, setClassification] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
 
-  // Part 2 — query/answer workspace state. `queryHistory` holds every
-  // {id, question, result} turn from POST /query this session, newest
-  // last (QueryWorkspace reverses it for display). `citationModal` is
-  // null when closed, or {label, loading, error, detail} while a
-  // citation chip's GET /citation/{doc_id}/{section} request is in
-  // flight or has resolved.
   const [queryHistory, setQueryHistory] = useState([]);
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryError, setQueryError] = useState(null);
   const [citationModal, setCitationModal] = useState(null);
 
-  // Part 3 — TKDL Search / ABS Helper tab state. Each is fetched lazily
-  // (`fetched` flips true on first attempt, success or failure, so the
-  // tab doesn't refetch every time it's reopened) and re-fetchable via
-  // each screen's "Re-check" button.
   const [tkdl, setTkdl] = useState({ data: null, loading: false, error: null, fetched: false });
   const [abs, setAbs] = useState({ data: null, loading: false, error: null, fetched: false });
 
-  // Part 4 — every catch below preserves err.status (set by api/client.js
-  // on every thrown error) alongside err.message, instead of collapsing to
-  // just the string. ErrorNotice uses the status (404 = unknown session_id)
-  // to tell a genuinely-lost-session failure apart from any other error and
-  // offer "Start a new session" instead of a dead-end message. See
-  // components/ErrorNotice.jsx's docstring for the full reasoning (build
-  // spec §19).
   const asErrorState = (err) => ({ message: err.message, status: err.status });
 
   const handleStart = async () => {
@@ -102,7 +79,7 @@ export default function App() {
     }
   };
 
-  const handleAskQuestion = async (question, language = 'en') => {
+  const handleAskQuestion = async (question, language = selectedLanguage) => {
     setQueryLoading(true);
     setQueryError(null);
     try {
@@ -116,6 +93,10 @@ export default function App() {
     } finally {
       setQueryLoading(false);
     }
+  };
+
+  const handleAddTurn = (turnObj) => {
+    setQueryHistory((prev) => [...prev, turnObj]);
   };
 
   const handleFetchTkdl = async () => {
@@ -167,12 +148,19 @@ export default function App() {
       <AppHeader
         step={step === 'landing' ? null : step}
         jurisdiction={pip?.jurisdiction}
+        language={selectedLanguage}
+        onLanguageChange={setSelectedLanguage}
         onRestart={handleRestart}
       />
 
       <main className="app-shell__main">
         {step === 'landing' && (
-          <Landing onStart={handleStart} loading={loading} error={error} />
+          <Landing
+            onStart={handleStart}
+            loading={loading}
+            error={error}
+            currentLang={selectedLanguage}
+          />
         )}
 
         {step === 'jurisdiction' && (
@@ -181,6 +169,7 @@ export default function App() {
             loading={loading}
             error={error}
             onRestart={handleRestart}
+            currentLang={selectedLanguage}
           />
         )}
 
@@ -190,6 +179,7 @@ export default function App() {
             loading={loading}
             error={error}
             onRestart={handleRestart}
+            currentLang={selectedLanguage}
           />
         )}
 
@@ -198,6 +188,7 @@ export default function App() {
             classification={classification}
             onContinue={() => setStep('workspace')}
             onBack={() => setStep('questionnaire')}
+            currentLang={selectedLanguage}
           />
         )}
 
@@ -209,17 +200,20 @@ export default function App() {
             queryLoading={queryLoading}
             queryError={queryError}
             onAsk={handleAskQuestion}
+            onAddTurn={handleAddTurn}
             onOpenCitation={handleOpenCitation}
             tkdl={tkdl}
             onFetchTkdl={handleFetchTkdl}
             abs={abs}
             onFetchAbs={handleFetchAbs}
             onRestart={handleRestart}
+            currentLang={selectedLanguage}
           />
         )}
       </main>
 
-      {step !== 'landing' && <EscalationCTA />}
+      {step !== 'landing' && <EscalationCTA currentLang={selectedLanguage} />}
+
 
       {citationModal && (
         <CitationDetailModal
@@ -229,6 +223,7 @@ export default function App() {
           detail={citationModal.detail}
           onClose={handleCloseCitation}
           onRestart={handleRestart}
+          currentLang={selectedLanguage}
         />
       )}
     </div>

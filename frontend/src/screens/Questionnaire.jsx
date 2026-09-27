@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CompositionRow, { CommonIngredientsDatalist } from './CompositionRow.jsx';
 import ErrorNotice from '../components/ErrorNotice.jsx';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 import {
   PROTECTION_TARGET_OPTIONS,
   INTENDED_USE_OPTIONS,
@@ -11,6 +12,7 @@ import {
   OBJECTIVE_OPTIONS,
 } from '../data/options.js';
 import './Questionnaire.css';
+
 
 let rowIdCounter = 0;
 const newRow = () => ({
@@ -28,7 +30,7 @@ const newRow = () => ({
  * endpoint's own docstring says is a valid way to handle gating from this
  * side). Section numbers in comments below refer to build spec §3.
  */
-export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
+export default function Questionnaire({ onSubmit, loading, error, onRestart, currentLang = 'en' }) {
   const [productName, setProductName] = useState('');
   const [protectionTarget, setProtectionTarget] = useState('');
   const [composition, setComposition] = useState([newRow()]);
@@ -42,6 +44,22 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
   const [developmentStatus, setDevelopmentStatus] = useState('');
   const [objectives, setObjectives] = useState([]);
   const [formError, setFormError] = useState(null);
+  const optionLabel = useTranslatedTexts([
+    ...PROTECTION_TARGET_OPTIONS, ...INTENDED_USE_OPTIONS, ...CLASSICAL_BASIS_OPTIONS,
+    ...NOVELTY_OPTIONS, ...INGREDIENT_SOURCE_OPTIONS, ...DEVELOPMENT_STATUS_OPTIONS,
+    ...OBJECTIVE_OPTIONS,
+  ].map((option) => option.label).concat([
+    'Product Intake Questionnaire', 'Tell us about your product to classify its IP and regulatory pathway.',
+    'Product name (optional)', 'What are you trying to protect?', 'Composition', 'Add ingredient',
+    'Intended use', 'Is it based on a classical/existing Ayurvedic formulation?',
+    'Is the formulation new, modified, or existing?', 'Source of ingredients (select all that apply)',
+    'Do you know the geographic origin of these ingredients?', 'Yes', 'No', 'Development status',
+    'What do you want to know? (select all that apply)', 'Classifying…', 'Analyze & Classify',
+    'e.g. Ashwagandha-Shatavari Rasayana', 'Name of the classical formulation (optional)',
+    'Region (e.g. Western Ghats, India)',
+    'Please tell us what you’re trying to protect.',
+    'Please select at least one thing you want to know.',
+  ]), currentLang);
 
   const needsComposition =
     protectionTarget === 'formulation' ||
@@ -68,11 +86,11 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
     setFormError(null);
 
     if (!protectionTarget) {
-      setFormError('Please tell us what you\u2019re trying to protect.');
+      setFormError(optionLabel('Please tell us what you\u2019re trying to protect.'));
       return;
     }
     if (objectives.length === 0) {
-      setFormError('Please select at least one thing you want to know.');
+      setFormError(optionLabel('Please select at least one thing you want to know.'));
       return;
     }
 
@@ -122,24 +140,23 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
     <form className="questionnaire" onSubmit={handleSubmit}>
       <CommonIngredientsDatalist />
 
-      <h2 className="questionnaire__title">Tell us about your product</h2>
+      <h2 className="questionnaire__title">{optionLabel('Product Intake Questionnaire')}</h2>
       <p className="questionnaire__subtitle">
-        Only the questions relevant to your answers will appear. Nothing here is stored
-        beyond this session.
+        {optionLabel('Tell us about your product to classify its IP and regulatory pathway.')}
       </p>
 
       <div className="questionnaire__field">
-        <label>Product name (optional)</label>
+        <label>{optionLabel('Product name (optional)')}</label>
         <input
           type="text"
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
-          placeholder="e.g. Ashwagandha-Shatavari Rasayana"
+          placeholder={optionLabel('e.g. Ashwagandha-Shatavari Rasayana')}
         />
       </div>
 
       <div className="questionnaire__field">
-        <label>What are you trying to protect?</label>
+        <label>{optionLabel('What are you trying to protect?')}</label>
         <div className="questionnaire__options-grid">
           {PROTECTION_TARGET_OPTIONS.map((opt) => (
             <label key={opt.value} className="questionnaire__radio">
@@ -150,7 +167,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 checked={protectionTarget === opt.value}
                 onChange={() => setProtectionTarget(opt.value)}
               />
-              {opt.label}
+              {optionLabel(opt.label)}
             </label>
           ))}
         </div>
@@ -158,7 +175,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {needsComposition && (
         <div className="questionnaire__field">
-          <label>Composition</label>
+          <label>{optionLabel('Composition')}</label>
           <div className="questionnaire__composition">
             {composition.map((row) => (
               <CompositionRow
@@ -167,10 +184,12 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 onChange={(updated) => updateRow(row.id, updated)}
                 onRemove={() => removeRow(row.id)}
                 canRemove={composition.length > 1}
+                currentLang={currentLang}
               />
+
             ))}
             <button type="button" className="questionnaire__add-row" onClick={addRow}>
-              + Add ingredient
+              + {optionLabel('Add ingredient')}
             </button>
           </div>
         </div>
@@ -178,7 +197,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {needsFormulationDetail && (
         <div className="questionnaire__field">
-          <label>Intended use</label>
+          <label>{optionLabel('Intended use')}</label>
           <div className="questionnaire__options-grid">
             {INTENDED_USE_OPTIONS.map((opt) => (
               <label key={opt.value} className="questionnaire__radio">
@@ -189,7 +208,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                   checked={intendedUse === opt.value}
                   onChange={() => setIntendedUse(opt.value)}
                 />
-                {opt.label}
+                {optionLabel(opt.label)}
               </label>
             ))}
           </div>
@@ -198,7 +217,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {needsFormulationDetail && (
         <div className="questionnaire__field">
-          <label>Is it based on a classical/existing Ayurvedic formulation?</label>
+          <label>{optionLabel('Is it based on a classical/existing Ayurvedic formulation?')}</label>
           <div className="questionnaire__options-grid">
             {CLASSICAL_BASIS_OPTIONS.map((opt) => (
               <label key={opt.value} className="questionnaire__radio">
@@ -209,7 +228,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                   checked={classicalBasis === opt.value}
                   onChange={() => setClassicalBasis(opt.value)}
                 />
-                {opt.label}
+                {optionLabel(opt.label)}
               </label>
             ))}
           </div>
@@ -217,7 +236,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
             <input
               type="text"
               className="questionnaire__followup"
-              placeholder="Name of the classical formulation (optional)"
+              placeholder={optionLabel('Name of the classical formulation (optional)')}
               value={classicalReference}
               onChange={(e) => setClassicalReference(e.target.value)}
             />
@@ -227,7 +246,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {needsFormulationDetail && showNovelty && (
         <div className="questionnaire__field">
-          <label>Is the formulation new, modified, or existing?</label>
+          <label>{optionLabel('Is the formulation new, modified, or existing?')}</label>
           <div className="questionnaire__options-grid">
             {NOVELTY_OPTIONS.map((opt) => (
               <label key={opt.value} className="questionnaire__radio">
@@ -238,7 +257,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                   checked={novelty === opt.value}
                   onChange={() => setNovelty(opt.value)}
                 />
-                {opt.label}
+                {optionLabel(opt.label)}
               </label>
             ))}
           </div>
@@ -247,7 +266,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {needsSourceDetail && (
         <div className="questionnaire__field">
-          <label>Source of ingredients (select all that apply)</label>
+          <label>{optionLabel('Source of ingredients (select all that apply)')}</label>
           <div className="questionnaire__options-grid">
             {INGREDIENT_SOURCE_OPTIONS.map((opt) => (
               <label key={opt.value} className="questionnaire__checkbox">
@@ -256,7 +275,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                   checked={ingredientSources.includes(opt.value)}
                   onChange={() => toggleInList(ingredientSources, setIngredientSources, opt.value)}
                 />
-                {opt.label}
+                {optionLabel(opt.label)}
               </label>
             ))}
           </div>
@@ -265,7 +284,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
 
       {showOriginQuestion && (
         <div className="questionnaire__field">
-          <label>Do you know the geographic origin of these ingredients?</label>
+          <label>{optionLabel('Do you know the geographic origin of these ingredients?')}</label>
           <div className="questionnaire__options-grid">
             <label className="questionnaire__radio">
               <input
@@ -274,7 +293,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 checked={originKnown === 'yes'}
                 onChange={() => setOriginKnown('yes')}
               />
-              Yes
+              {optionLabel('Yes')}
             </label>
             <label className="questionnaire__radio">
               <input
@@ -283,14 +302,14 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 checked={originKnown === 'no'}
                 onChange={() => setOriginKnown('no')}
               />
-              No
+              {optionLabel('No')}
             </label>
           </div>
           {originKnown === 'yes' && (
             <input
               type="text"
               className="questionnaire__followup"
-              placeholder="Region (e.g. Western Ghats, India)"
+              placeholder={optionLabel('Region (e.g. Western Ghats, India)')}
               value={originRegion}
               onChange={(e) => setOriginRegion(e.target.value)}
             />
@@ -299,7 +318,7 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
       )}
 
       <div className="questionnaire__field">
-        <label>Development status</label>
+        <label>{optionLabel('Development status')}</label>
         <div className="questionnaire__options-grid">
           {DEVELOPMENT_STATUS_OPTIONS.map((opt) => (
             <label key={opt.value} className="questionnaire__radio">
@@ -310,14 +329,14 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 checked={developmentStatus === opt.value}
                 onChange={() => setDevelopmentStatus(opt.value)}
               />
-              {opt.label}
+                {optionLabel(opt.label)}
             </label>
           ))}
         </div>
       </div>
 
       <div className="questionnaire__field">
-        <label>What do you want to know? (select all that apply)</label>
+        <label>{optionLabel('What do you want to know? (select all that apply)')}</label>
         <div className="questionnaire__options-grid">
           {OBJECTIVE_OPTIONS.map((opt) => (
             <label key={opt.value} className="questionnaire__checkbox">
@@ -326,20 +345,17 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart }) {
                 checked={objectives.includes(opt.value)}
                 onChange={() => toggleInList(objectives, setObjectives, opt.value)}
               />
-              {opt.label}
+              {optionLabel(opt.label)}
             </label>
           ))}
         </div>
       </div>
 
       {formError && <p className="questionnaire__error">{formError}</p>}
-      {/* Part 4: this is the longest single step in the wizard, so a lost
-          session here is the most expensive place to hit it — offer the
-          restart explicitly rather than just an error line. */}
-      <ErrorNotice error={error} onRestart={onRestart} />
+      <ErrorNotice error={error} onRestart={onRestart} currentLang={currentLang} />
 
       <button type="submit" className="questionnaire__submit" disabled={loading}>
-        {loading ? 'Classifying…' : 'Continue to classification'}
+        {loading ? optionLabel('Classifying…') : optionLabel('Analyze & Classify')}
       </button>
     </form>
   );

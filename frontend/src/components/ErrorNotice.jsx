@@ -1,4 +1,5 @@
 import './ErrorNotice.css';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 
 /**
  * Part 4 — reusable error banner with recovery actions.
@@ -47,7 +48,12 @@ function isNetworkError(error) {
   return /could not reach the backend/i.test(getMessage(error));
 }
 
-export default function ErrorNotice({ error, onRetry, onRestart, retryLabel = 'Try again' }) {
+export default function ErrorNotice({ error, onRetry, onRestart, retryLabel = 'Try again', currentLang = 'en' }) {
+  const uiText = useTranslatedTexts([
+    'Something went wrong', 'Session lost', "Can't reach the backend",
+    'Start a new session', 'Try again',
+    "We couldn't find your session on the server — it may have expired, or the backend restarted. Anything typed so far on this screen isn't recoverable, but starting a new session only takes a few seconds.",
+  ], currentLang);
   if (!error) return null;
 
   const message = getMessage(error);
@@ -72,8 +78,8 @@ export default function ErrorNotice({ error, onRetry, onRestart, retryLabel = 'T
       className={'error-notice' + (sessionLost ? ' error-notice--session' : '')}
       role="alert"
     >
-      <p className="error-notice__title">{title}</p>
-      <p className="error-notice__message">{body}</p>
+      <p className="error-notice__title">{uiText(title)}</p>
+      <p className="error-notice__message">{sessionLost ? uiText(body) : body}</p>
       {(onRetry || onRestart) && (
         <div className="error-notice__actions">
           {onRetry && (
@@ -90,7 +96,7 @@ export default function ErrorNotice({ error, onRetry, onRestart, retryLabel = 'T
               }
               onClick={onRestart}
             >
-              Start a new session
+              {uiText('Start a new session')}
             </button>
           )}
         </div>

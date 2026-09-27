@@ -1,4 +1,5 @@
 import './ConfidenceBadge.css';
+import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 
 /**
  * N-D5-04 / CONF-01→05 badge contract.
@@ -11,9 +12,10 @@ import './ConfidenceBadge.css';
  * with different text, so `abstained` always wins regardless of what
  * `confidence` says.
  */
-export default function ConfidenceBadge({ confidence, abstained }) {
+export default function ConfidenceBadge({ confidence, abstained, currentLang = 'en' }) {
+  const uiText = useTranslatedTexts(['No answer', 'High confidence', 'Medium confidence', 'Low confidence'], currentLang);
   if (abstained) {
-    return <span className="confidence-badge confidence-badge--abstain">No answer</span>;
+    return <span className="confidence-badge confidence-badge--abstain">{uiText('No answer')}</span>;
   }
 
   const level = confidence || 'low';
@@ -21,7 +23,7 @@ export default function ConfidenceBadge({ confidence, abstained }) {
 
   return (
     <span className={`confidence-badge confidence-badge--${level}`}>
-      {labels[level] || level}
+      {uiText(labels[level] || level)}
     </span>
   );
 }

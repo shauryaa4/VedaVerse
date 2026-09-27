@@ -174,10 +174,13 @@ def query_endpoint(request: QueryRequest) -> RagResponse:
             # LANGUAGE LAYER:
             # Translation happens only after citation verification and
             # confidence/abstention processing are complete.
-            result.answer_text = translate_from_english(
-                result.answer_text,
-                request.language,
-            )
+            # Citation/confidence checks can deliberately abstain and clear
+            # answer_text. Never send that empty text to the translation API.
+            if not result.abstained and result.answer_text.strip():
+                result.answer_text = translate_from_english(
+                    result.answer_text,
+                    request.language,
+                )
 
         # API-04: log every query for post-demo debugging. Never let a
         # logging failure break the actual response the user is waiting on.
