@@ -24,7 +24,7 @@ rule in build spec §2.
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.models.pip import (
@@ -35,6 +35,7 @@ from backend.models.pip import (
     ProtectionTarget,
 )
 from backend.services.pip_session_store import get_session, save_session
+from backend.routes.auth import ensure_session_access, optional_current_user
 
 router = APIRouter()
 
@@ -64,39 +65,40 @@ class IntakeRequest(BaseModel):
 def _apply_intake(pip: ProductIntelligenceProfile, body: IntakeRequest) -> None:
     """Mutates pip in place, writing only the fields the caller actually sent."""
 
-    if body.jurisdiction is not None:
+    if "jurisdiction" in body.model_fields_set:
         pip.jurisdiction = body.jurisdiction
-    if body.language is not None:
+    if "language" in body.model_fields_set:
         pip.language = body.language
-    if body.protection_target is not None:
+    if "protection_target" in body.model_fields_set:
         pip.protection_target = body.protection_target
-    if body.objective is not None:
+    if "objective" in body.model_fields_set:
         pip.objective = body.objective
 
-    if body.product_name is not None:
+    if "product_name" in body.model_fields_set:
         pip.product.name = body.product_name
-    if body.composition is not None:
+    if "composition" in body.model_fields_set:
         pip.product.composition = body.composition
-    if body.intended_use is not None:
+    if "intended_use" in body.model_fields_set:
         pip.product.intended_use = body.intended_use
-    if body.classical_basis is not None:
+    if "classical_basis" in body.model_fields_set:
         pip.product.classical_basis = body.classical_basis
-    if body.classical_reference is not None:
+    if "classical_reference" in body.model_fields_set:
         pip.product.classical_reference = body.classical_reference
-    if body.novelty is not None:
+    if "novelty" in body.model_fields_set:
         pip.product.novelty = body.novelty
-    if body.ingredient_sources is not None:
+    if "ingredient_sources" in body.model_fields_set:
         pip.product.ingredient_sources = body.ingredient_sources
-    if body.biological_origin_known is not None:
+    if "biological_origin_known" in body.model_fields_set:
         pip.product.biological_origin_known = body.biological_origin_known
-    if body.biological_origin_region is not None:
+    if "biological_origin_region" in body.model_fields_set:
         pip.product.biological_origin_region = body.biological_origin_region
-    if body.development_status is not None:
+    if "development_status" in body.model_fields_set:
         pip.product.development_status = body.development_status
 
 
 @router.post("/intake", response_model=ProductIntelligenceProfile)
-def intake_endpoint(body: IntakeRequest) -> ProductIntelligenceProfile:
+def intake_endpoint(body: IntakeRequest, user: dict | None = Depends(optional_current_user)) -> ProductIntelligenceProfile:
+    ensure_session_access(body.session_id, user)
     pip = get_session(body.session_id)
     if pip is None:
         raise HTTPException(status_code=404, detail="Unknown session_id. Call POST /session first.")

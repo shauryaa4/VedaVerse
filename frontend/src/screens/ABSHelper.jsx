@@ -6,7 +6,7 @@ import './ABSHelper.css';
 export default function ABSHelper({ state, onFetch, onRestart, currentLang = 'en' }) {
   const { data, loading, error, fetched } = state;
   const uiText = useTranslatedTexts([
-    'ABS Helper — DEMO. Not a live filing status check. No NBA/State Biodiversity Board integration.',
+    'ABS-aware guidance · Not a live NBA/SBB filing or status service.',
     'Checking Access & Benefit-Sharing relevance…', 'Re-check', 'Who to check with',
     'This may trigger a pre-IP-filing approval requirement under Section 6 of the Biological Diversity Act.',
     data?.relevance?.replace(/_/g, ' ')?.toUpperCase(), data?.disclaimer,
@@ -21,7 +21,7 @@ export default function ABSHelper({ state, onFetch, onRestart, currentLang = 'en
   return (
     <div className="abs-helper">
       <div className="abs-helper__banner">
-        {uiText('ABS Helper — DEMO. Not a live filing status check. No NBA/State Biodiversity Board integration.')}
+        {uiText('ABS-aware guidance · Not a live NBA/SBB filing or status service.')}
       </div>
 
       {loading && <p className="abs-helper__status">{uiText('Checking Access & Benefit-Sharing relevance…')}</p>}

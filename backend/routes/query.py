@@ -9,7 +9,7 @@ persistent client on every single call, which is unnecessary the moment
 there's real traffic to handle (even hackathon-demo traffic).
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.models.pip import ProductIntelligenceProfile
@@ -31,6 +31,7 @@ from backend.logic.language import (
     translate_to_english,
     translate_from_english,
 )
+from backend.routes.auth import ensure_session_access, optional_current_user
 
 router = APIRouter()
 
@@ -121,8 +122,9 @@ class QueryRequest(BaseModel):
 
 
 @router.post("/query", response_model=RagResponse)
-def query_endpoint(request: QueryRequest) -> RagResponse:
+def query_endpoint(request: QueryRequest, user: dict | None = Depends(optional_current_user)) -> RagResponse:
     if request.session_id is not None:
+        ensure_session_access(request.session_id, user)
         pip = get_session(request.session_id)
         if pip is None:
             raise HTTPException(

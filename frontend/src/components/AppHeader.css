@@ -64,6 +64,21 @@
   gap: 12px;
 }
 
+.app-header__account-actions { display: flex; align-items: center; gap: 10px; }
+.app-header__login, .app-header__signup { border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; }
+.app-header__login { border: 1px solid var(--border); color: var(--ink); background: var(--surface); }
+.app-header__signup { border: 1px solid #34724d; color: white; background: #34724d; }
+.app-header__dashboard { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; border: 1px solid #cbdccf; border-radius: 7px; padding: 7px 11px; color: #285b3b; background: #f6faf7; font-size: 11px; font-weight: 650; white-space: nowrap; transition: background-color 140ms ease, border-color 140ms ease; }
+.app-header__dashboard:hover { border-color: #9fbea7; background: #eaf3ed; }
+.app-header__dashboard span { font-size: 15px; line-height: 1; }
+.app-header__login:hover { border-color: var(--herb); }
+.app-header__signup:hover { background: #245638; }
+.app-header__guest { display: flex; align-items: center; gap: 7px; color: #3b5543; font-size: 12px; font-weight: 600; }
+.app-header__guest span { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #e8f2eb; color: #34724d; }
+.app-header__profile { display: flex; align-items: center; gap: 8px; color: #3b5543; font-size: 12px; font-weight: 600; }
+.app-header__profile-avatar { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #e8f2eb; color: #34724d; }
+.app-header__profile button { border: 0; background: transparent; color: #34724d; font-size: 11px; font-weight: 600; }
+
 .app-header__jurisdiction {
   font-family: var(--font-sans);
   font-size: 12.5px;
@@ -114,6 +129,9 @@
   outline: none;
 }
 
+.app-header__language-picker { display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 7px; color: var(--herb-dark); background: var(--surface); }
+.app-header__language-picker select { max-width: 118px; border: 0; outline: 0; color: inherit; background: transparent; font: 12px var(--font-sans); cursor: pointer; }
+
 
 .app-header__steps {
   display: flex;
@@ -134,6 +152,9 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+.app-header__step-button { display: flex; align-items: center; gap: 8px; border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.app-header__step-button:focus-visible { outline: 2px solid var(--herb); outline-offset: 4px; border-radius: 4px; }
 
 .app-header__step-index {
   display: flex;
@@ -183,4 +204,6 @@
   .app-header__brand-subtitle {
     display: none;
   }
+  .app-header__account-actions { gap: 6px; }
+  .app-header__login, .app-header__signup { padding: 8px 10px; font-size: 12px; }
 }

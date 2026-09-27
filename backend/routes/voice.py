@@ -4,7 +4,7 @@ import base64
 import os
 import tempfile
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from backend.logic.language import (
@@ -14,6 +14,7 @@ from backend.logic.language import (
 )
 from backend.logic.speech import speech_service
 from backend.routes.query import QueryRequest, query_endpoint
+from backend.routes.auth import optional_current_user
 
 router = APIRouter(prefix="/voice", tags=["Voice"])
 
@@ -108,6 +109,7 @@ async def voice_chat_endpoint(
     audio: UploadFile = File(...),
     session_id: str = Form(...),
     language: str | None = Form(None),
+    user: dict | None = Depends(optional_current_user),
 ):
     """
     End-to-End Bhashini Voice Chat Pipeline:
@@ -150,7 +152,7 @@ async def voice_chat_endpoint(
             question=user_transcript,
             language=detected_lang,
         )
-        rag_res = query_endpoint(query_req)
+        rag_res = query_endpoint(query_req, user=user)
 
         # Step 5: Bhashini TTS (Voice answer generation)
         audio_b64 = None

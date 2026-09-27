@@ -7,10 +7,10 @@ export default function TKDLSearch({ state, onFetch, onRestart, currentLang = 'e
   const { data, loading, error, fetched } = state;
   const assessment = data?.assessment;
   const uiText = useTranslatedTexts([
-    'TKDL Search — DEMONSTRATION DATA. Not connected to the live Traditional Knowledge Digital Library.',
-    'Checking against the demo TKDL dataset…', 'Re-check', 'overlap risk',
+    'Offline archive of source-derived records. Not connected to the live Traditional Knowledge Digital Library.',
+    'Checking the offline source-derived record archive…', 'Re-check', 'overlap risk',
     'Closest match:', 'Already documented', 'Appears different', 'Potential novel features',
-    'All candidate records', 'No matches in the demo dataset for this composition.',
+    'All candidate records', 'No matches in this archive for this composition.',
     'ingredient overlap', 'Matched:', 'In record, not yours:',
     assessment?.risk_level?.toUpperCase(), assessment?.disclaimer,
     ...(assessment?.reasoning || []), ...(assessment?.what_was_already_known || []),
@@ -25,10 +25,10 @@ export default function TKDLSearch({ state, onFetch, onRestart, currentLang = 'e
   return (
     <div className="tkdl">
       <div className="tkdl__banner">
-        {uiText('TKDL Search — DEMONSTRATION DATA. Not connected to the live Traditional Knowledge Digital Library.')}
+        {uiText('Offline archive of source-derived records. Not connected to the live Traditional Knowledge Digital Library.')}
       </div>
 
-      {loading && <p className="tkdl__status">{uiText('Checking against the demo TKDL dataset…')}</p>}
+      {loading && <p className="tkdl__status">{uiText('Checking the offline source-derived record archive…')}</p>}
       <ErrorNotice error={error} onRetry={onFetch} onRestart={onRestart} retryLabel={uiText('Re-check')} currentLang={currentLang} />
 
       {data && (
@@ -92,7 +92,7 @@ export default function TKDLSearch({ state, onFetch, onRestart, currentLang = 'e
           <div className="tkdl__matches">
             <p className="tkdl__matches-title">{uiText('All candidate records')} ({data.matches.length})</p>
             {data.matches.length === 0 && (
-              <p className="tkdl__status">{uiText('No matches in the demo dataset for this composition.')}</p>
+              <p className="tkdl__status">{uiText('No matches in this archive for this composition.')}</p>
             )}
             {data.matches.map((m) => (
               <div key={m.record.record_id} className="tkdl__match card">

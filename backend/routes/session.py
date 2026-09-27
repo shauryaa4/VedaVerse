@@ -13,14 +13,15 @@ all state lives in backend/services/pip_session_store.py, this file only
 turns the HTTP call into a store call and back.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from backend.models.pip import ProductIntelligenceProfile
 from backend.services.pip_session_store import create_session
+from backend.routes.auth import optional_current_user
 
 router = APIRouter()
 
 
 @router.post("/session", response_model=ProductIntelligenceProfile)
-def create_session_endpoint() -> ProductIntelligenceProfile:
-    return create_session()
+def create_session_endpoint(user: dict | None = Depends(optional_current_user)) -> ProductIntelligenceProfile:
+    return create_session(user["id"] if user else None)

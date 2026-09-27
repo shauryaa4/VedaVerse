@@ -56,7 +56,7 @@ class ABSAssessment(BaseModel):
     ip_filing_note: Optional[str] = None
 
     disclaimer: str = (
-        "ABS-aware decision support — DEMO HELPER, not a compliance filing "
+        "ABS-aware decision support, not a compliance filing "
         "determination. Based on a simplified, deterministic reading of India's "
         "Biological Diversity Act, 2002 (as amended) applied only to the "
         "information you provided. This tool is NOT connected to the National "

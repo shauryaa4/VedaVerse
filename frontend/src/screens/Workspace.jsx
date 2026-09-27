@@ -1,15 +1,8 @@
-import { useState } from 'react';
 import QueryWorkspace from './QueryWorkspace.jsx';
 import TKDLSearch from './TKDLSearch.jsx';
 import ABSHelper from './ABSHelper.jsx';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 import './Workspace.css';
-
-const TABS = [
-  { key: 'query', label: 'Ask & Explore' },
-  { key: 'tkdl', label: 'TKDL Search' },
-  { key: 'abs', label: 'ABS Helper' },
-];
 
 export default function Workspace({
   pip,
@@ -25,30 +18,22 @@ export default function Workspace({
   abs,
   onFetchAbs,
   onRestart,
+  onEndCase,
+  canEndCase = true,
   currentLang = 'en',
+  tab = 'query',
+  onTabChange,
 }) {
-  const [tab, setTab] = useState('query');
-  const uiText = useTranslatedTexts(TABS.map((item) => item.label), currentLang);
-
+  const uiText = useTranslatedTexts(['Ask & Explore', 'TKDL Match', 'ABS Helper', 'End case', 'End this case and add it to Case History.'], currentLang);
   return (
     <div className="workspace-shell">
-      <div className="workspace-shell__tabs" role="tablist">
-        {TABS.map((tb) => (
-          <button
-            key={tb.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === tb.key}
-            className={
-              'workspace-shell__tab' + (tab === tb.key ? ' workspace-shell__tab--active' : '')
-            }
-            onClick={() => setTab(tb.key)}
-          >
-            {uiText(tb.label)}
-          </button>
-        ))}
-      </div>
-
+      <nav className="workspace-shell__tabs" aria-label="Case tools">
+        {[
+          ['query', 'Ask & Explore'],
+          ['tkdl', 'TKDL Match'],
+          ['abs', 'ABS Helper'],
+        ].map(([key, label]) => <button key={key} type="button" onClick={() => onTabChange?.(key)} className={`workspace-shell__tab${tab === key ? ' workspace-shell__tab--active' : ''}`}>{uiText(label)}</button>)}
+      </nav>
       {tab === 'query' && (
         <QueryWorkspace
           pip={pip}
@@ -81,6 +66,8 @@ export default function Workspace({
           currentLang={currentLang}
         />
       )}
+
+      {canEndCase && <div className="workspace-shell__end-case"><span>{uiText('End this case and add it to Case History.')}</span><button type="button" onClick={onEndCase} disabled={queryLoading}>{uiText('End case')}</button></div>}
 
     </div>
   );

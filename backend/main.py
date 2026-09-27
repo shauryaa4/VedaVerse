@@ -17,6 +17,8 @@ from backend.routes.tkdl_routes import router as tkdl_router
 from backend.routes.abs_routes import router as abs_router
 from backend.routes.voice import router as voice_router
 from backend.routes.bhashini_routes import router as bhashini_router
+from backend.routes.auth import router as auth_router
+from backend.routes.datasets import router as datasets_router
 
 app = FastAPI(title="IP-SAKTI Sahayak API", version="0.1.0")
 
@@ -37,6 +39,8 @@ app.include_router(abs_router)
 app.include_router(tkdl_router)
 app.include_router(voice_router)
 app.include_router(bhashini_router)
+app.include_router(auth_router)
+app.include_router(datasets_router)
 
 
 

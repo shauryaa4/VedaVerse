@@ -8,10 +8,11 @@ The `verified` field comes from the stored verification result.
 This endpoint does NOT perform a fresh citation-support check.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.services.citation_cache import get_citation
+from backend.routes.auth import ensure_session_access, optional_current_user
 
 
 router = APIRouter()
@@ -32,7 +33,10 @@ def citation_endpoint(
     doc_id: str,
     section: str,
     session_id: str,
+    user: dict | None = Depends(optional_current_user),
 ) -> CitationResponse:
+
+    ensure_session_access(session_id, user)
 
     citation_id = f"{doc_id}:{section}"
 

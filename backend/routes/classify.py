@@ -14,11 +14,12 @@ Never presents this as an LLM guess — build spec §4 is explicit that this
 is a deterministic rule engine, and CLS-01's own docstring repeats that.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.logic.classification import Category, Confidence, apply_classification_to_pip
 from backend.services.pip_session_store import get_session, save_session
+from backend.routes.auth import ensure_session_access, optional_current_user
 
 router = APIRouter()
 
@@ -35,7 +36,8 @@ class ClassifyResponse(BaseModel):
 
 
 @router.post("/classify", response_model=ClassifyResponse)
-def classify_endpoint(body: ClassifyRequest) -> ClassifyResponse:
+def classify_endpoint(body: ClassifyRequest, user: dict | None = Depends(optional_current_user)) -> ClassifyResponse:
+    ensure_session_access(body.session_id, user)
     pip = get_session(body.session_id)
     if pip is None:
         raise HTTPException(status_code=404, detail="Unknown session_id. Call POST /session first.")

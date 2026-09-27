@@ -1,9 +1,11 @@
 import ErrorNotice from '../components/ErrorNotice.jsx';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
+import { SUPPORTED_LANGUAGES } from '../utils/translator.js';
 import './Landing.css';
 
-export default function Landing({ onStart, loading, error, currentLang = 'en' }) {
+export default function Landing({ onStart, loading, error, currentLang = 'en', onLanguageChange }) {
   const uiText = useTranslatedTexts([
+    'Language',
     'Know how the law treats your Ayurvedic product — before you file anything.',
     'Classical formulation or new combination? India or international? Patent, trademark, or regulatory pathway? Answer a few questions and get a grounded, citation-backed answer — with a confidence score, and an honest "we don\'t know" when the corpus doesn\'t cover it.',
     'Formulation-aware classification, not a generic chatbot guess',
@@ -15,6 +17,7 @@ export default function Landing({ onStart, loading, error, currentLang = 'en' })
   return (
     <div className="landing">
       <div className="landing__card card">
+        <label className="landing__language"><span>{uiText('Language')}</span><select aria-label={uiText('Language')} value={currentLang} onChange={(event) => onLanguageChange?.(event.target.value)}>{SUPPORTED_LANGUAGES.map((language) => <option key={language.code} value={language.code}>{language.native}</option>)}</select></label>
         <p className="landing__eyebrow">AIIA · Ministry of AYUSH · SIH 26045</p>
         <h1 className="landing__title">
           {uiText('Know how the law treats your Ayurvedic product — before you file anything.')}

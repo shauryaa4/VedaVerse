@@ -1,21 +1,22 @@
 :root {
   /* --- existing tokens, unchanged --- */
-  --ink: #1B1A17;
-  --paper: #F7F4EE;
-  --turmeric: #B8842A;
-  --turmeric-dim: #8F6A22;
-  --herb: #2B4C43;
-  --herb-dark: #1E362F;
-  --border: #DDD6C7;
+  --ink: #20352a;
+  --paper: #FFFFFF;
+  --paper-warm: #F7FAF8;
+  --turmeric: #6f8c71;
+  --turmeric-dim: #486d50;
+  --herb: #34724d;
+  --herb-dark: #245638;
+  --border: #dce7de;
   --font-serif: 'Fraunces', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
 
   /* --- added for the built-out screens (Part 1) --- */
   --surface: #FFFFFF;
-  --ink-muted: #6B6455;
+  --ink-muted: #64766a;
 
-  --herb-light: #E4ECE8;
-  --turmeric-light: #F6EBD8;
+  --herb-light: #e8f2eb;
+  --turmeric-light: #edf4ee;
 
   --danger: #A6432B;
   --danger-light: #FBE7E2;
@@ -68,4 +69,41 @@ button {
 
 .app-shell__main {
   flex: 1;
+}
+
+.app-shell__main--workspace { display: flex; min-width: 0; background: #f7faf8; }
+.app-shell__main--workspace > .workspace-shell { flex: 1; min-width: 0; }
+.app-shell--dashboard { height: 100dvh; min-height: 600px; overflow: hidden; }
+.app-shell--dashboard .app-header { position: relative; flex: 0 0 auto; }
+.app-shell--dashboard .app-shell__main--workspace { flex: 1; height: 0; min-height: 0; overflow: hidden; }
+.app-shell--dashboard .workspace-sidebar, .app-shell--dashboard .account-dashboard { height: 100%; min-height: 0; }
+.app-shell--dashboard .account-dashboard { overflow: hidden; }
+.app-shell__main > .landing,
+.app-shell__main > .jurisdiction,
+.app-shell__main > .questionnaire,
+.app-shell__main > .classification { animation: workflow-view-enter 280ms cubic-bezier(.2,.7,.25,1) both; }
+@keyframes workflow-view-enter { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+.account-notice__backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(19, 31, 49, .42); }
+.account-notice { position: relative; width: min(100%, 430px); padding: 32px; }
+.account-notice h2 { color: #254534; margin-bottom: 10px; }
+.account-notice p:not(.landing__eyebrow) { color: #6b7c70; line-height: 1.6; font-size: 14px; margin: 0 0 22px; }
+.account-notice__close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: #6b7c70; font-size: 25px; }
+.account-dialog { max-height: min(90vh, 760px); overflow: auto; }
+.account-dialog__intro { margin-bottom: 18px !important; }
+.account-dialog form { display: grid; gap: 12px; }
+.account-dialog label { display: grid; gap: 5px; color: #3a5543; font-size: 12px; font-weight: 600; }
+.account-dialog label span { color: #87958a; font-size: 10px; font-weight: 400; }
+.account-dialog input { width: 100%; min-height: 40px; padding: 9px 11px; border: 1px solid #d5e2d8; border-radius: 7px; outline-color: #4e8a62; color: #294334; background: white; font: 13px var(--font-sans); }
+.account-dialog__hint { color: #7c8d80; font-size: 10px; }
+.account-dialog__error { margin: 0 !important; color: #a32e28 !important; font-size: 12px !important; }
+.account-dialog .landing__cta { width: 100%; margin-top: 6px; }
+
+@media (max-width: 760px) { .app-shell__main--workspace { flex-direction: column; } }
+@media (max-width: 760px) {
+  .app-shell--dashboard .app-shell__main--workspace { flex-direction: column; }
+  .app-shell--dashboard .workspace-sidebar { width: auto; flex: 0 0 auto; height: auto; }
+  .app-shell--dashboard .account-dashboard { width: 100%; flex: 1 1 auto; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell__main > .landing, .app-shell__main > .jurisdiction, .app-shell__main > .questionnaire, .app-shell__main > .classification { animation-duration: 1ms; }
 }

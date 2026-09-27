@@ -155,6 +155,8 @@ class BhashiniSpeechService:
                             "sourceLanguage": language
                         },
                         "serviceId": ASR_SERVICE_ID,
+                        "audioFormat": "wav",
+                        "samplingRate": 16000,
                     },
                 }
             ],

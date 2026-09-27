@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CompositionRow, { CommonIngredientsDatalist } from './CompositionRow.jsx';
 import ErrorNotice from '../components/ErrorNotice.jsx';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
@@ -30,19 +30,25 @@ const newRow = () => ({
  * endpoint's own docstring says is a valid way to handle gating from this
  * side). Section numbers in comments below refer to build spec §3.
  */
-export default function Questionnaire({ onSubmit, loading, error, onRestart, currentLang = 'en' }) {
-  const [productName, setProductName] = useState('');
-  const [protectionTarget, setProtectionTarget] = useState('');
-  const [composition, setComposition] = useState([newRow()]);
-  const [intendedUse, setIntendedUse] = useState('');
-  const [classicalBasis, setClassicalBasis] = useState('');
-  const [classicalReference, setClassicalReference] = useState('');
-  const [novelty, setNovelty] = useState('');
-  const [ingredientSources, setIngredientSources] = useState([]);
-  const [originKnown, setOriginKnown] = useState('');
-  const [originRegion, setOriginRegion] = useState('');
-  const [developmentStatus, setDevelopmentStatus] = useState('');
-  const [objectives, setObjectives] = useState([]);
+export default function Questionnaire({ onSubmit, onDraftChange, initialPip, loading, error, onRestart, currentLang = 'en' }) {
+  const initial = initialPip || {};
+  const product = initial.product || {};
+  const localDraftKey = initial.session_id ? `ip-sakti-case-draft:${initial.session_id}` : '';
+  let localDraft = {};
+  try { if (localDraftKey) localDraft = JSON.parse(localStorage.getItem(localDraftKey) || '{}'); } catch (_) { /* use the server copy */ }
+  const savedProduct = { ...product, ...(localDraft.product || {}) };
+  const [productName, setProductName] = useState(localDraft.product_name ?? savedProduct.name ?? '');
+  const [protectionTarget, setProtectionTarget] = useState(localDraft.protection_target ?? initial.protection_target ?? '');
+  const [composition, setComposition] = useState((localDraft.composition || savedProduct.composition)?.length ? (localDraft.composition || savedProduct.composition).map((row) => ({ ...row, id: `row-${rowIdCounter++}`, quantity: row.quantity || '', unit: row.unit || '' })) : [newRow()]);
+  const [intendedUse, setIntendedUse] = useState(localDraft.intended_use ?? savedProduct.intended_use ?? '');
+  const [classicalBasis, setClassicalBasis] = useState(localDraft.classical_basis ?? savedProduct.classical_basis ?? '');
+  const [classicalReference, setClassicalReference] = useState(localDraft.classical_reference ?? savedProduct.classical_reference ?? '');
+  const [novelty, setNovelty] = useState(localDraft.novelty ?? savedProduct.novelty ?? '');
+  const [ingredientSources, setIngredientSources] = useState(localDraft.ingredient_sources ?? savedProduct.ingredient_sources ?? []);
+  const [originKnown, setOriginKnown] = useState(localDraft.biological_origin_known ?? savedProduct.biological_origin_known ?? '');
+  const [originRegion, setOriginRegion] = useState(localDraft.biological_origin_region ?? savedProduct.biological_origin_region ?? '');
+  const [developmentStatus, setDevelopmentStatus] = useState(localDraft.development_status ?? savedProduct.development_status ?? '');
+  const [objectives, setObjectives] = useState(localDraft.objective ?? initial.objective ?? []);
   const [formError, setFormError] = useState(null);
   const optionLabel = useTranslatedTexts([
     ...PROTECTION_TARGET_OPTIONS, ...INTENDED_USE_OPTIONS, ...CLASSICAL_BASIS_OPTIONS,
@@ -71,6 +77,30 @@ export default function Questionnaire({ onSubmit, loading, error, onRestart, cur
     protectionTarget === 'formulation' || protectionTarget === 'biological_resource';
   const showOriginQuestion =
     needsSourceDetail && (ingredientSources.includes('plant') || ingredientSources.includes('animal'));
+
+  useEffect(() => {
+    if (!onDraftChange || !initialPip?.session_id) return undefined;
+    const draft = { product_name: productName, objective: objectives, protection_target: protectionTarget || null };
+    if (needsComposition) draft.composition = composition.filter((row) => row.ingredient.trim()).map(({ ingredient, quantity, unit, is_active }) => ({ ingredient: ingredient.trim(), quantity: quantity || null, unit: unit || null, is_active }));
+    else draft.composition = [];
+    if (needsFormulationDetail) {
+      draft.intended_use = intendedUse || null;
+      draft.classical_basis = classicalBasis || null;
+      draft.classical_reference = classicalReference;
+      draft.novelty = novelty || null;
+    } else { draft.intended_use = null; draft.classical_basis = null; draft.classical_reference = null; draft.novelty = null; }
+    if (needsSourceDetail) {
+      draft.ingredient_sources = ingredientSources;
+      draft.biological_origin_known = showOriginQuestion ? (originKnown || null) : null;
+      draft.biological_origin_region = showOriginQuestion ? originRegion : null;
+    } else { draft.ingredient_sources = []; draft.biological_origin_known = null; draft.biological_origin_region = null; }
+    draft.development_status = developmentStatus || null;
+    try { localStorage.setItem(localDraftKey, JSON.stringify(draft)); } catch (_) { /* server autosave still runs */ }
+    const timer = window.setTimeout(() => {
+      onDraftChange(draft);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [onDraftChange, initialPip?.session_id, productName, protectionTarget, composition, intendedUse, classicalBasis, classicalReference, novelty, ingredientSources, originKnown, originRegion, developmentStatus, objectives, needsComposition, needsFormulationDetail, needsSourceDetail, showOriginQuestion]);
 
   const toggleInList = (list, setList, value) => {
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);

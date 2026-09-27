@@ -16,6 +16,38 @@ const STARTER_QUESTIONS = {
   general: 'What should I know about protecting this product?',
 };
 
+async function toMonoWav16k(recordedBlob) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) throw new Error('This browser cannot convert microphone audio for speech recognition.');
+  const audioContext = new AudioContextClass();
+  try {
+    const decoded = await audioContext.decodeAudioData(await recordedBlob.arrayBuffer());
+    const source = decoded.getChannelData(0);
+    const ratio = decoded.sampleRate / 16000;
+    const frameCount = Math.ceil(source.length / ratio);
+    const pcm = new ArrayBuffer(44 + frameCount * 2);
+    const view = new DataView(pcm);
+    const write = (offset, value) => Array.from(value).forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
+    write(0, 'RIFF'); view.setUint32(4, 36 + frameCount * 2, true); write(8, 'WAVE');
+    write(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); view.setUint32(24, 16000, true); view.setUint32(28, 32000, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true); write(36, 'data');
+    view.setUint32(40, frameCount * 2, true);
+    for (let i = 0; i < frameCount; i++) {
+      const start = Math.floor(i * ratio);
+      const end = Math.min(source.length, Math.max(start + 1, Math.floor((i + 1) * ratio)));
+      let sample = 0;
+      for (let j = start; j < end; j++) sample += source[j];
+      sample /= end - start;
+      const clipped = Math.max(-1, Math.min(1, sample));
+      view.setInt16(44 + i * 2, clipped < 0 ? clipped * 0x8000 : clipped * 0x7fff, true);
+    }
+    return new Blob([pcm], { type: 'audio/wav' });
+  } finally {
+    await audioContext.close();
+  }
+}
+
 export default function QueryWorkspace({
   pip,
   classification,
@@ -123,11 +155,17 @@ export default function QueryWorkspace({
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        // Stop audio tracks
+        const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+        const recordedBlob = new Blob(audioChunksRef.current, { type: mimeType });
         stream.getTracks().forEach((track) => track.stop());
-        await processAudioTranscription(audioBlob);
+        try {
+          const wavBlob = await toMonoWav16k(recordedBlob);
+          await processAudioTranscription(wavBlob);
+        } catch (err) {
+          console.error('Microphone audio conversion failed:', err);
+          setVoiceError(`Could not prepare your recording: ${err.message}`);
+          setVoiceStep('idle');
+        }
       };
 
       mediaRecorderRef.current.start();
@@ -217,7 +255,7 @@ export default function QueryWorkspace({
     'Jurisdiction', 'India', 'International', 'Based on what you told us, you might ask:',
     'Text Chat', 'Voice AI Assistant', "Ask a question about this product's IP or regulatory pathway…",
     'Asking…', 'Ask', 'Click the microphone and speak your question…', 'Tap to speak',
-    'Listening... Speak now', 'Stop Recording & Send', 'Confirm & Get Answer',
+      'Listening... Speak now', 'Stop Recording', 'Confirm & Get Answer', voiceError || '',
     ...objectives.map((obj) => STARTER_QUESTIONS[obj] || OBJECTIVE_OPTIONS.find((o) => o.value === obj)?.label || obj),
   ], currentLang);
 
@@ -292,7 +330,7 @@ export default function QueryWorkspace({
         </form>
       ) : (
         <div className="workspace__voice-panel card">
-          {voiceError && <p className="workspace__error">{voiceError}</p>}
+            {voiceError && <p className="workspace__error">{uiText(voiceError)}</p>}
 
           {voiceStep === 'idle' && (
             <div className="workspace__voice-step">
@@ -322,7 +360,7 @@ export default function QueryWorkspace({
                 onClick={stopVoiceRecording}
               >
                 <span className="workspace__mic-icon">⏹️</span>
-                <span className="workspace__mic-label">{uiText('Stop Recording & Send')}</span>
+                  <span className="workspace__mic-label">{uiText('Stop Recording')}</span>
               </button>
             </div>
           )}

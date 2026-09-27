@@ -10,6 +10,26 @@
   padding: 40px;
 }
 
+.landing__language {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 9px;
+  margin: -8px 0 20px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.landing__language select {
+  max-width: 180px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 30px 8px 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
 .landing__eyebrow {
   font-size: 12.5px;
   font-weight: 600;

@@ -9,12 +9,21 @@
  */
 
 const BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+const AUTH_TOKEN_KEY = 'ip-sakti-auth-token';
+
+export function getAuthToken() { return localStorage.getItem(AUTH_TOKEN_KEY); }
+export function saveAuthToken(token) { localStorage.setItem(AUTH_TOKEN_KEY, token); }
+export function clearAuthToken() { localStorage.removeItem(AUTH_TOKEN_KEY); }
 
 async function request(path, options = {}) {
   let res;
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
+        ...(options.headers || {}),
+      },
       ...options,
     });
   } catch (networkErr) {
@@ -36,7 +45,83 @@ async function request(path, options = {}) {
     throw err;
   }
 
+  if (res.status === 204) return null;
+
   return res.json();
+}
+
+async function requestFormData(path, formData, fallbackMessage) {
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+      body: formData,
+    });
+  } catch (networkErr) {
+    throw new Error(
+      `Could not reach the backend at ${BASE}${path}. Is the backend running? (${networkErr.message})`
+    );
+  }
+
+  if (!res.ok) {
+    let detail = res.statusText || fallbackMessage;
+    try {
+      const body = await res.json();
+      detail = body.detail || JSON.stringify(body);
+    } catch (_) {
+      /* response wasn't JSON — fall back to statusText */
+    }
+    const err = new Error(detail || fallbackMessage);
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json();
+}
+
+export function signUpAccount(details) {
+  return request('/auth/signup', { method: 'POST', body: JSON.stringify(details) });
+}
+
+export function logInAccount(credentials) {
+  return request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) });
+}
+
+export function getCurrentAccount() { return request('/auth/me'); }
+
+export function logOutAccount() {
+  return request('/auth/logout', { method: 'POST', body: '{}' });
+}
+
+export function getSavedCases() { return request('/auth/cases'); }
+export function getActiveCase() { return request('/auth/active-case'); }
+export function completeCase(sessionId) {
+  return request(`/auth/cases/${encodeURIComponent(sessionId)}/complete`, { method: 'POST', body: '{}' });
+}
+
+export function getSavedCase(sessionId) {
+  return request(`/auth/cases/${encodeURIComponent(sessionId)}`);
+}
+
+export function getSavedCaseDetails(sessionId) {
+  return request(`/auth/cases/${encodeURIComponent(sessionId)}/details`);
+}
+
+export function deleteSavedCase(sessionId) {
+  return request(`/auth/cases/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+}
+
+export function saveCaseStage(sessionId, stage) {
+  return request(`/auth/cases/${encodeURIComponent(sessionId)}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) });
+}
+
+export function getAccountActivity() { return request('/auth/activity'); }
+
+export function searchDataset(dataset, query = '', limit = 20, offset = 0, jurisdiction = 'all') {
+  const params = new URLSearchParams({ q: query, limit: String(limit), offset: String(offset) });
+  if (dataset === 'legal' && jurisdiction !== 'all') params.set('jurisdiction', jurisdiction);
+  return request(`/datasets/${dataset}?${params}`);
 }
 
 /** POST /session -> full (empty) ProductIntelligenceProfile, includes session_id */
@@ -79,7 +164,7 @@ export function askQuestion(sessionId, question, language = 'en') {
   });
 }
 
-/** POST /tkdl/search -> {assessment, matches[], mock: true} */
+/** POST /tkdl/search -> {assessment, matches[]} from the offline source-derived archive */
 export function tkdlSearch(sessionId) {
   return request('/tkdl/search', {
     method: 'POST',
@@ -128,16 +213,7 @@ export async function transcribeVoice(audioFile, language = null) {
   formData.append('audio', audioFile);
   if (language) formData.append('language', language);
 
-  const res = await fetch(`${BASE}/voice/transcribe`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || 'Voice transcription failed.');
-  }
-  return res.json();
+  return requestFormData('/voice/transcribe', formData, 'Voice transcription failed.');
 }
 
 /** POST /voice/tts -> {audio_base64, language} */
@@ -155,15 +231,6 @@ export async function sendVoiceChat(sessionId, audioBlob, language = null) {
   formData.append('session_id', sessionId);
   if (language) formData.append('language', language);
 
-  const res = await fetch(`${BASE}/voice/chat`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || 'Voice chat processing failed.');
-  }
-  return res.json();
+  return requestFormData('/voice/chat', formData, 'Voice chat processing failed.');
 }
 

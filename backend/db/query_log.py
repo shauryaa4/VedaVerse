@@ -102,3 +102,59 @@ def get_recent_queries(limit: int = 20, db_path: str = DEFAULT_DB_PATH) -> list[
             "SELECT * FROM query_log ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(row) for row in rows]
+
+
+def get_activity_for_sessions(session_ids: list[str], limit: int = 10, db_path: str = DEFAULT_DB_PATH) -> dict:
+    """Return real aggregate counts and recent question metadata for saved cases."""
+    if not session_ids:
+        return {"question_count": 0, "abstained_count": 0, "recent": []}
+    # Keep the IN clause below SQLite's parameter limit while covering many
+    # sessions by querying chunks and combining their persisted rows.
+    total_count = 0
+    abstained_count = 0
+    rows = []
+    with _connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        for start in range(0, len(session_ids), 400):
+            batch = session_ids[start:start + 400]
+            placeholders = ",".join("?" for _ in batch)
+            counts = conn.execute(
+                f"SELECT COUNT(*),COALESCE(SUM(abstained),0) FROM query_log WHERE session_id IN ({placeholders})",
+                batch,
+            ).fetchone()
+            total_count += counts[0]
+            abstained_count += counts[1]
+            rows.extend(conn.execute(
+                f"SELECT timestamp,session_id,question,jurisdiction,category,abstained "
+                f"FROM query_log WHERE session_id IN ({placeholders}) ORDER BY id DESC LIMIT ?",
+                (*batch, max(1, min(limit, 50))),
+            ).fetchall())
+    rows.sort(key=lambda row: row["timestamp"], reverse=True)
+    return {
+        "question_count": total_count,
+        "abstained_count": abstained_count,
+        "recent": [dict(row) for row in rows[:max(1, min(limit, 50))]],
+    }
+
+
+def get_queries_for_session(session_id: str, db_path: str = DEFAULT_DB_PATH) -> list[dict]:
+    with _connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("SELECT * FROM query_log WHERE session_id=? ORDER BY id", (session_id,)).fetchall()
+    result = []
+    for row in rows:
+        item = dict(row)
+        for key in ("objectives", "where_clause", "used_chunk_ids"):
+            if item.get(key):
+                try:
+                    item[key] = json.loads(item[key])
+                except (TypeError, json.JSONDecodeError):
+                    pass
+        item["abstained"] = bool(item["abstained"])
+        result.append(item)
+    return result
+
+
+def delete_queries_for_session(session_id: str, db_path: str = DEFAULT_DB_PATH) -> None:
+    with _connect(db_path) as conn:
+        conn.execute("DELETE FROM query_log WHERE session_id=?", (session_id,))
