@@ -21,6 +21,8 @@ from backend.logic.classification import Category
 from backend.models.classification_input import ClassificationInput
 from backend.models.classification_input import CompositionItem as ClassificationCompositionItem
 
+from backend.models.abs_models import ABSFactProfile
+
 IngredientSource = Literal["plant", "animal", "mineral", "microbial", "synthetic"]
 
 Objective = Literal[
@@ -80,6 +82,7 @@ class ProductIntelligenceProfile(BaseModel):
     protection_target: Optional[ProtectionTarget] = None
     objective: list[Objective] = Field(default_factory=list)
     classification: Classification = Field(default_factory=Classification)
+    abs_facts: Optional[ABSFactProfile] = None
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
