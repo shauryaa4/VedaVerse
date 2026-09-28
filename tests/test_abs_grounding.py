@@ -39,7 +39,7 @@ def test_no_collection_returns_assessment_unchanged():
     relies on this so a Chroma outage never takes down /abs/assess."""
     assessment = _assessment_with(["Some reasoning line."])
     result = ground_abs_citations(assessment, collection=None)
-    assert result.citations == []
+    assert result.grounded_reasoning == []
     assert result is assessment
 
 
@@ -59,8 +59,8 @@ def test_strong_overlap_marks_citation_verified():
 
     result = ground_abs_citations(assessment, collection=fake)
 
-    assert len(result.citations) == 1
-    citation = result.citations[0]
+    assert len(result.grounded_reasoning) == 1
+    citation = result.grounded_reasoning[0]
     assert citation.reasoning_text == reasoning
     assert citation.doc_id == "IN-3"
     assert citation.document_name == "Biological Diversity Act 2002"
@@ -80,8 +80,8 @@ def test_weak_overlap_marks_citation_unverified_not_dropped():
 
     result = ground_abs_citations(assessment, collection=fake)
 
-    assert len(result.citations) == 1
-    assert result.citations[0].verified is False
+    assert len(result.grounded_reasoning) == 1
+    assert result.grounded_reasoning[0].verified is False
 
 
 def test_no_results_leaves_line_ungrounded():
@@ -90,7 +90,7 @@ def test_no_results_leaves_line_ungrounded():
 
     result = ground_abs_citations(assessment, collection=fake)
 
-    assert result.citations == []
+    assert result.grounded_reasoning == []
 
 
 def test_multiple_reasoning_lines_each_get_their_own_citation():
@@ -118,9 +118,9 @@ def test_multiple_reasoning_lines_each_get_their_own_citation():
     result = ground_abs_citations(assessment, collection=fake)
 
     assert fake.calls == 2
-    assert len(result.citations) == 2
-    assert {c.reasoning_text for c in result.citations} == set(reasoning_lines)
-    assert all(c.verified for c in result.citations)
+    assert len(result.grounded_reasoning) == 2
+    assert {c.reasoning_text for c in result.grounded_reasoning} == set(reasoning_lines)
+    assert all(c.verified for c in result.grounded_reasoning)
 
 
 def test_retrieval_exception_is_swallowed_per_line():
@@ -132,4 +132,4 @@ def test_retrieval_exception_is_swallowed_per_line():
     result = ground_abs_citations(assessment, collection=_ExplodingCollection())
 
     # Must not raise, and must leave the assessment usable with no citations.
-    assert result.citations == []
+    assert result.grounded_reasoning == []

@@ -1,0 +1,376 @@
+{
+  "title": "National Biodiversity Authority (NBA) Access and Benefit Sharing (ABS) Operational & Legal Knowledge Base",
+  "version": "2024.1",
+  "effective_date": "2024-01-01",
+  "statutory_act": "Biological Diversity Act, 2002 (as amended by Biological Diversity (Amendment) Act, 2023)",
+  "rules": "Biological Diversity Rules, 2024",
+  "legal_rules": [
+    {
+      "rule_id": "ABS_RULE_SEC3_FOREIGN_ACCESS",
+      "rule_name": "Prior NBA Approval for Foreign Entity Access",
+      "section_or_rule": "Section 3 & Section 3A, Biological Diversity Act, 2002 (as amended 2023)",
+      "target_applicant": "foreign_entity_or_individual",
+      "target_activity": [
+        "research",
+        "bio_survey",
+        "bio_utilisation",
+        "commercial_utilisation"
+      ],
+      "description": "Any person who is not a citizen of India, or an entity incorporated outside India, or an Indian company having foreign participation or control, must obtain prior approval of the National Biodiversity Authority (NBA) before obtaining any biological resource occurring in India or associated traditional knowledge.",
+      "authority": "National Biodiversity Authority (NBA)",
+      "required_form": "Form 1",
+      "source_doc_id": "IN-3",
+      "source_provision": "Section 3(1) and Section 3(2)",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "rule_id": "ABS_RULE_SEC7_INDIAN_INTIMATION",
+      "rule_name": "Prior Intimation to State Biodiversity Board for Indian Entities",
+      "section_or_rule": "Section 7, Biological Diversity Act, 2002 (as amended 2023)",
+      "target_applicant": [
+        "indian_citizen",
+        "indian_company_no_foreign_control"
+      ],
+      "target_activity": [
+        "commercial_utilisation",
+        "bio_utilisation"
+      ],
+      "description": "Indian citizens and Indian entities without foreign shareholding/control obtaining Indian biological resources for commercial utilisation must give prior intimation to the concerned State Biodiversity Board (SBB).",
+      "authority": "State Biodiversity Board (SBB)",
+      "required_form": "Form B / SBB Intimation",
+      "source_doc_id": "IN-3",
+      "source_provision": "Section 7",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "rule_id": "ABS_RULE_SEC6_IPR_APPROVAL",
+      "rule_name": "Prior NBA Approval for IPR Applications Based on Indian Biological Resources",
+      "section_or_rule": "Section 6, Biological Diversity Act, 2002 (as amended 2023)",
+      "target_applicant": [
+        "foreign_entity_or_individual",
+        "indian_citizen",
+        "indian_company_no_foreign_control",
+        "indian_company_with_foreign_control"
+      ],
+      "target_activity": [
+        "ipr_application",
+        "ipr_grant",
+        "ipr_commercialisation"
+      ],
+      "description": "No person shall apply for any intellectual property right, in India or outside India, for any invention based on any research or information on a biological resource obtained from India, without obtaining prior approval of the NBA.",
+      "authority": "National Biodiversity Authority (NBA)",
+      "required_form": "Form 3",
+      "source_doc_id": "IN-3",
+      "source_provision": "Section 6(1)",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "rule_id": "ABS_RULE_SEC4_TRANSFER_RESEARCH_RESULTS",
+      "rule_name": "Transfer of Research Results to Foreign Entities",
+      "section_or_rule": "Section 4, Biological Diversity Act, 2002 (as amended 2023)",
+      "target_applicant": [
+        "indian_citizen",
+        "indian_company_no_foreign_control"
+      ],
+      "target_activity": [
+        "research_result_transfer"
+      ],
+      "description": "No person shall transfer the results of any research relating to any biological resource occurring in or obtained from India to any foreign entity/individual without prior approval of NBA.",
+      "authority": "National Biodiversity Authority (NBA)",
+      "required_form": "Form 2",
+      "source_doc_id": "IN-3",
+      "source_provision": "Section 4",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "rule_id": "ABS_RULE_SEC20_THIRD_PARTY_TRANSFER",
+      "rule_name": "Third Party Transfer of Biological Resource or Knowledge",
+      "section_or_rule": "Section 20, Biological Diversity Act, 2002 (as amended 2023)",
+      "target_applicant": [
+        "foreign_entity_or_individual",
+        "indian_citizen",
+        "indian_company_no_foreign_control",
+        "indian_company_with_foreign_control"
+      ],
+      "target_activity": [
+        "resource_transfer"
+      ],
+      "description": "No person who has been granted approval under Section 3 shall transfer any biological resource or knowledge to a third party without prior approval of the NBA.",
+      "authority": "National Biodiversity Authority (NBA)",
+      "required_form": "Form 4",
+      "source_doc_id": "IN-3",
+      "source_provision": "Section 20",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    }
+  ],
+  "special_cases_and_exemptions": [
+    {
+      "exemption_id": "ABS_EXEMPTION_CULTIVATED_PLANTS",
+      "name": "Cultivated Medicinal Plants Exemption",
+      "source_provision": "Section 40 & Biological Diversity Rules, 2024",
+      "conditions": {
+        "resource_type": "plant",
+        "source_type": "cultivated",
+        "certificate_of_origin_status": "PROVIDED"
+      },
+      "consequence": "Exempt from routine NBA benefit sharing requirements for access, provided a valid Certificate of Origin issued by competent State Agriculture/Forest/AYUSH authority is maintained.",
+      "source_doc_id": "IN-4",
+      "effective_date": "2024-01-01",
+      "source_url": "https://www.indiacode.nic.in"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_AYUSH_CODIFIED_TK",
+      "name": "Codified Traditional Knowledge & Registered AYUSH Practitioner Exemption",
+      "source_provision": "Section 3A Proviso & Section 7 Proviso (2023 Amendment)",
+      "conditions": {
+        "applicant_category": "ayush_practitioner",
+        "associated_tk": true,
+        "tk_type": "codified",
+        "activity": "commercial_utilisation"
+      },
+      "consequence": "Registered AYUSH practitioners and domestic manufacturers practicing codified traditional knowledge in Indian systems of medicine are exempted from prior SBB intimation/NBA access approval fees for traditional formulations.",
+      "source_doc_id": "IN-3",
+      "effective_date": "2023-08-03",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_NORMALLY_TRADED_COMMODITIES",
+      "name": "Normally Traded Commodities (NTC) Exemption",
+      "source_provision": "Section 40 Gazette Notification",
+      "conditions": {
+        "source_type": "market_or_trader",
+        "activity_not_in": [
+          "research",
+          "ipr_application",
+          "bio_utilisation"
+        ]
+      },
+      "consequence": "Biological resources notified as Normally Traded Commodities purchased from open market strictly for trade or direct consumption are exempt from ABS access requirements. Exemption DOES NOT apply if used for research, IP filing, or commercial product extraction.",
+      "source_doc_id": "IN-3",
+      "effective_date": "2024-01-01",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_FOREIGN_BIOLOGICAL_RESOURCE",
+      "name": "Foreign Biological Resources Exemption",
+      "source_provision": "Section 3(1) Scope",
+      "conditions": {
+        "country_of_origin": "FOREIGN",
+        "obtained_outside_india": true
+      },
+      "consequence": "Indian domestic BDA access requirements do not apply to biological resources obtained outside India. Compliance with Nagoya Protocol / Provider Country ABS laws is required.",
+      "source_doc_id": "INTL-3",
+      "effective_date": "2014-10-12",
+      "source_url": "https://www.cbd.int/abs/text/default.shtml"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_COLLABORATIVE_RESEARCH",
+      "name": "Collaborative Government Research Exemption",
+      "source_provision": "Section 5, Biological Diversity Act, 2002",
+      "conditions": {
+        "activity": "research",
+        "government_approved_collaboration": true
+      },
+      "consequence": "Exempt from Sections 3 and 4 approvals if research project conforms to Central Government guidelines and is approved by Central Government.",
+      "source_doc_id": "IN-3",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_ITPGRFA",
+      "name": "ITPGRFA Multilateral System Exemption",
+      "source_provision": "International Treaty on Plant Genetic Resources for Food and Agriculture (ITPGRFA)",
+      "conditions": {
+        "is_itpgrfa_crop": true,
+        "purpose": "food_and_agriculture"
+      },
+      "consequence": "Plant genetic resources for food and agriculture covered under the ITPGRFA Multilateral System (MLS) accessed under a Standard Material Transfer Agreement (SMTA) are exempt from domestic BDA prior approval.",
+      "source_doc_id": "INTL-3",
+      "effective_date": "2004-06-29",
+      "source_url": "https://www.fao.org/plant-treaty/en/"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_FOREIGN_REPOSITORY_MICROBE",
+      "name": "Foreign Repository Microorganism Exemption",
+      "source_provision": "Section 3(1) Scope / International Depository",
+      "conditions": {
+        "source_type": "institution",
+        "repository_location": "outside_india"
+      },
+      "consequence": "Microorganisms sourced directly from authorized international depositories outside India without Indian field collection fall outside domestic BDA access jurisdiction.",
+      "source_doc_id": "INTL-3",
+      "effective_date": "2014-10-12",
+      "source_url": "https://www.cbd.int/abs/text/default.shtml"
+    },
+    {
+      "exemption_id": "ABS_EXEMPTION_COMMUNITY_TK",
+      "name": "Community Traditional Knowledge Protection",
+      "source_provision": "Section 21 & Biological Diversity Rules, 2024",
+      "conditions": {
+        "tk_type": "community",
+        "associated_tk": true
+      },
+      "consequence": "Community-held uncodified traditional knowledge requires explicit Prior Informed Consent (PIC) and Mutually Agreed Terms (MAT) with local indigenous communities / benefit claimers.",
+      "source_doc_id": "IN-3",
+      "effective_date": "2002-02-05",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2046"
+    }
+  ],
+  "forms": [
+    {
+      "form_id": "FORM_1",
+      "form_name": "Form I - Application for Access to Biological Resources and Associated Traditional Knowledge",
+      "purpose": "Prior approval for foreign entities/individuals to access Indian biological resources or TK for research or commercial utilization.",
+      "applicant_category": "foreign_entity_or_individual",
+      "activity": [
+        "research",
+        "bio_survey",
+        "bio_utilisation",
+        "commercial_utilisation"
+      ],
+      "ipr_stage": "ANY",
+      "authority": "National Biodiversity Authority (NBA)",
+      "fee": "INR 10,000 (Individual) / INR 50,000 (Entity)",
+      "required_documents": [
+        "Identity / Incorporation Certificate",
+        "Details of biological resource and scientific name",
+        "Geographical location of access",
+        "MOU / Agreement with local supplier or community",
+        "Project Proposal & Intended use details"
+      ],
+      "source_doc_id": "IN-4"
+    },
+    {
+      "form_id": "FORM_2",
+      "form_name": "Form II - Application for Transfer of Results of Research",
+      "purpose": "Prior approval to transfer research results on Indian biological resources to foreign individuals or entities.",
+      "applicant_category": "ANY",
+      "activity": [
+        "research_result_transfer"
+      ],
+      "ipr_stage": "ANY",
+      "authority": "National Biodiversity Authority (NBA)",
+      "fee": "INR 5,000",
+      "required_documents": [
+        "Research summary report",
+        "Details of transferee entity",
+        "Copy of draft agreement or transfer terms"
+      ],
+      "source_doc_id": "IN-4"
+    },
+    {
+      "form_id": "FORM_3",
+      "form_name": "Form III - Application for Seeking Approval for Applying for Intellectual Property Rights",
+      "purpose": "Prior approval before applying for IP rights (patent or otherwise) in India or abroad based on Indian biological resources.",
+      "applicant_category": "ANY",
+      "activity": [
+        "ipr_application",
+        "ipr_grant"
+      ],
+      "ipr_stage": "IPR_APPLICATION",
+      "authority": "National Biodiversity Authority (NBA)",
+      "fee": "INR 500 (Individual) / INR 5,000 (Entity)",
+      "required_documents": [
+        "Draft Patent Specification / Application details",
+        "Source and geographical origin declaration of biological resource",
+        "Details of associated Traditional Knowledge used",
+        "Commercialisation projection plan"
+      ],
+      "source_doc_id": "IN-4"
+    },
+    {
+      "form_id": "FORM_4",
+      "form_name": "Form IV - Application for Seeking Approval for Third Party Transfer",
+      "purpose": "Prior approval for transferring accessed biological resource or knowledge to a third party.",
+      "applicant_category": "ANY",
+      "activity": [
+        "resource_transfer"
+      ],
+      "ipr_stage": "ANY",
+      "authority": "National Biodiversity Authority (NBA)",
+      "fee": "INR 10,000",
+      "required_documents": [
+        "Original Form 1 Approval Copy",
+        "Details of third party recipient",
+        "Justification for third party transfer"
+      ],
+      "source_doc_id": "IN-4"
+    },
+    {
+      "form_id": "FORM_B_SBB",
+      "form_name": "Form B / SBB Intimation Notice",
+      "purpose": "Prior intimation by Indian citizens/companies to State Biodiversity Board before commercial utilization of biological resources.",
+      "applicant_category": [
+        "indian_citizen",
+        "indian_company_no_foreign_control"
+      ],
+      "activity": [
+        "commercial_utilisation"
+      ],
+      "ipr_stage": "ANY",
+      "authority": "State Biodiversity Board (SBB)",
+      "fee": "Nominal State Intimation Fee (as specified by relevant SBB)",
+      "required_documents": [
+        "Business Registration Certificate",
+        "List of biological ingredients and source traders/cultivators",
+        "Quantity requirement estimation per annum"
+      ],
+      "source_doc_id": "IN-3"
+    },
+    {
+      "form_id": "CERTIFICATE_OF_ORIGIN",
+      "form_name": "Certificate of Origin for Cultivated Medicinal Plants",
+      "purpose": "Official certification establishing that medicinal plant material was sourced from registered cultivated farmland/nursery.",
+      "applicant_category": "ANY",
+      "activity": [
+        "commercial_utilisation",
+        "bio_utilisation"
+      ],
+      "ipr_stage": "ANY",
+      "authority": "State Agriculture Department / Forest Department / AYUSH Officer",
+      "fee": "Nil / Standard State Administrative Fee",
+      "required_documents": [
+        "Land Record / Farmer Registration",
+        "Cultivation inspection log",
+        "Trader / Purchase Invoice from registered farmer"
+      ],
+      "source_doc_id": "IN-4"
+    }
+  ],
+  "benefit_sharing_slabs": {
+    "commercial_utilisation": [
+      {
+        "turnover_band": "UP_TO_1_CRORE",
+        "min_turnover_inr": 0,
+        "max_turnover_inr": 10000000,
+        "rate_percentage": 0.1,
+        "description": "0.1% of annual gross ex-factory sales / turnover"
+      },
+      {
+        "turnover_band": "1_TO_5_CRORE",
+        "min_turnover_inr": 10000001,
+        "max_turnover_inr": 50000000,
+        "rate_percentage": 0.2,
+        "description": "0.2% of annual gross ex-factory sales / turnover"
+      },
+      {
+        "turnover_band": "ABOVE_5_CRORE",
+        "min_turnover_inr": 50000001,
+        "max_turnover_inr": null,
+        "rate_percentage": 0.5,
+        "description": "0.5% of annual gross ex-factory sales / turnover"
+      }
+    ],
+    "ipr_commercialisation": {
+      "royalty_rate_min_percent": 1.0,
+      "royalty_rate_max_percent": 3.0,
+      "description": "1.0% to 3.0% of gross royalty / fee received from licensing or commercialisation of IPR"
+    },
+    "disclaimer": "Indicative calculation based on Biological Diversity Rules 2024 benefit sharing guidelines. Final benefit sharing obligations are determined solely by NBA/SBB during formal agreement execution."
+  }
+}
