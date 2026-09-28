@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import ConfidenceBadge from '../components/ConfidenceBadge.jsx';
+import ConfidencePanel from '../components/ConfidencePanel.jsx';
 import { parseCitationMarkers } from '../utils/parseCitations.js';
 import { generateTTS } from '../api/client.js';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
@@ -24,6 +25,9 @@ export default function AnswerCard({ turn, onOpenCitation, currentLang = 'en' })
     abstained,
     abstain_reason: abstainReason,
     confidence,
+    confidence_score: confidenceScore,
+    confidence_breakdown: confidenceBreakdown,
+    confidence_reason: confidenceReason,
     status_notes: statusNotes,
   } = result;
 
@@ -194,8 +198,19 @@ export default function AnswerCard({ turn, onOpenCitation, currentLang = 'en' })
       {autoplayBlocked && <p className="answer-card__playback-hint">{uiText('Tap Listen Voice to play the answer.')}</p>}
 
       <div className="answer-card__meta">
-        <ConfidenceBadge confidence={confidence} abstained={abstained} currentLang={currentLang} />
+        <ConfidenceBadge confidence={confidence} score={confidenceScore} abstained={abstained} currentLang={currentLang} />
       </div>
+
+      {!abstained && typeof confidenceScore === 'number' && (
+        <ConfidencePanel
+          score={confidenceScore}
+          breakdown={confidenceBreakdown}
+          level={confidence || 'low'}
+          reason={confidenceReason}
+          currentLang={currentLang}
+          showGauge={false}
+        />
+      )}
 
       {abstained ? (
         <div className="answer-card__abstain">

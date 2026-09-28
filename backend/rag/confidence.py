@@ -31,7 +31,7 @@ Inputs consumed (all already real, nothing here invents a new signal):
 from typing import Literal, Optional
 
 from backend.logic.classification import Confidence
-from backend.rag.generation import RagResponse
+from backend.rag.generation import ConfidenceComponent, RagResponse
 
 # ---------------------------------------------------------------------------
 # CONF-01 -- decision type + thresholds
@@ -184,32 +184,83 @@ def apply_confidence_decision(
 # ---------------------------------------------------------------------------
 
 
+_WEIGHT_CITATION = 0.5
+_WEIGHT_CLASSIFICATION = 0.3
+_WEIGHT_SOURCES = 0.2
+_CONFIDENCE_ANCHOR = {"high": 1.0, "medium": 0.6, "low": 0.3}
+
+
+def compute_confidence_breakdown(
+    classification_confidence: Optional[Confidence],
+    citation_support_score: float,
+    source_count: int,
+) -> list[ConfidenceComponent]:
+    """
+    The three real signals behind the numeric score, each with its raw value,
+    weight and contribution -- so the UI can draw exactly how the number was
+    built instead of showing a single unexplained percentage.
+      - 50%: citation support  -- fraction of the answer's claims that
+        verified against retrieved legal text (CITE-05).
+      - 30%: classification    -- how certain the deterministic rule engine
+        (CLS-01) was about the product category.
+      - 20%: source coverage   -- how many independent retrieved chunks the
+        answer drew from; 2+ counts as full credit.
+    """
+    level = classification_confidence or "low"
+    citation_value = max(0.0, min(float(citation_support_score), 1.0))
+    classification_value = _CONFIDENCE_ANCHOR.get(level, 0.3)
+    sources_value = min(source_count / 2, 1.0)
+
+    def _component(key, label, value, weight, detail):
+        return ConfidenceComponent(
+            key=key,
+            label=label,
+            value=value,
+            weight=weight,
+            contribution=value * weight,
+            detail=detail,
+        )
+
+    return [
+        _component(
+            "citation_support",
+            "Citation support",
+            citation_value,
+            _WEIGHT_CITATION,
+            f"{citation_value:.0%} of the answer's claims verified against retrieved law",
+        ),
+        _component(
+            "classification",
+            "Classification certainty",
+            classification_value,
+            _WEIGHT_CLASSIFICATION,
+            f"Rule engine confidence was {level}",
+        ),
+        _component(
+            "sources",
+            "Source coverage",
+            sources_value,
+            _WEIGHT_SOURCES,
+            f"{source_count} independent source{'s' if source_count != 1 else ''} used",
+        ),
+    ]
+
+
+def _score_from_breakdown(breakdown: list[ConfidenceComponent]) -> float:
+    return round(sum(component.contribution for component in breakdown), 2)
+
+
 def compute_confidence_score(
     classification_confidence: Optional[Confidence],
     citation_support_score: float,
     source_count: int,
 ) -> float:
-    """
-    Weighted sum of three real signals, each independently meaningful:
-      - 50%: citation_support_score -- fraction of the answer's claims that
-        actually verified against retrieved legal text (CITE-05).
-      - 30%: classification_confidence -- how certain the deterministic rule
-        engine (CLS-01) was about the product category.
-      - 20%: source_count -- how many independent retrieved chunks the answer
-        drew from; 2+ counts as full credit.
-    """
-    confidence_anchor = {"high": 1.0, "medium": 0.6, "low": 0.3}
-    classification_component = confidence_anchor.get(
-        classification_confidence or "low", 0.3
+    """Weighted sum of the three signals in compute_confidence_breakdown()."""
+    return _score_from_breakdown(
+        compute_confidence_breakdown(
+            classification_confidence, citation_support_score, source_count
+        )
     )
-    source_component = min(source_count / 2, 1.0)
-
-    score = (
-        0.5 * citation_support_score
-        + 0.3 * classification_component
-        + 0.2 * source_component
-    )
-    return round(score, 2)
 
 
 # ---------------------------------------------------------------------------
@@ -237,10 +288,12 @@ def evaluate_confidence(
     )
     rag_response = apply_confidence_decision(rag_response, decision, level, reason)
 
-    rag_response.confidence_score = compute_confidence_score(
+    breakdown = compute_confidence_breakdown(
         classification_confidence,
         citation_support_score,
         len(rag_response.used_chunks),
     )
+    rag_response.confidence_breakdown = breakdown
+    rag_response.confidence_score = _score_from_breakdown(breakdown)
 
     return rag_response

@@ -187,3 +187,52 @@ def test_evaluate_confidence_abstain_path_sets_low_confidence():
     )
     assert result.abstained is True
     assert result.confidence == "low"
+
+
+# ---------------------------------------------------------------------------
+# Numeric confidence score + breakdown (drives the UI gauge/bar chart)
+# ---------------------------------------------------------------------------
+
+from backend.rag.confidence import (  # noqa: E402
+    compute_confidence_breakdown,
+    compute_confidence_score,
+)
+
+
+def test_breakdown_weights_sum_to_one():
+    breakdown = compute_confidence_breakdown("high", 1.0, 2)
+    assert round(sum(c.weight for c in breakdown), 6) == 1.0
+
+
+def test_breakdown_contributions_add_up_to_the_score():
+    breakdown = compute_confidence_breakdown("medium", 0.8, 1)
+    score = compute_confidence_score("medium", 0.8, 1)
+    assert round(sum(c.contribution for c in breakdown), 2) == score
+
+
+def test_score_known_values():
+    # 0.5*1.0 + 0.3*1.0 + 0.2*1.0
+    assert compute_confidence_score("high", 1.0, 2) == 1.0
+    # 0.5*0.8 + 0.3*0.6 + 0.2*0.5
+    assert compute_confidence_score("medium", 0.8, 1) == 0.68
+    # None classification is treated as "low": 0.5*0.0 + 0.3*0.3 + 0.2*0.0
+    assert compute_confidence_score(None, 0.0, 0) == 0.09
+
+
+def test_source_coverage_caps_at_full_credit():
+    sources = [c for c in compute_confidence_breakdown("high", 1.0, 5) if c.key == "sources"][0]
+    assert sources.value == 1.0
+
+
+def test_evaluate_confidence_fills_score_and_breakdown():
+    response = _make_response()
+    result = evaluate_confidence(
+        classification_confidence="high",
+        citation_support_score=1.0,
+        citation_forced_abstain=False,
+        rag_response=response,
+    )
+    assert len(result.confidence_breakdown) == 3
+    assert result.confidence_score == round(
+        sum(c.contribution for c in result.confidence_breakdown), 2
+    )

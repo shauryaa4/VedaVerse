@@ -62,6 +62,21 @@ class RetrievedChunkRef(BaseModel):
     )
 
 
+class ConfidenceComponent(BaseModel):
+    """
+    One weighted input to the numeric confidence score. Returned to the
+    frontend so the score can be drawn as a breakdown chart, not just a
+    single opaque number.
+    """
+
+    key: str  # "citation_support" | "classification" | "sources"
+    label: str  # human-readable name for the chart row
+    value: float  # raw signal, 0.0-1.0
+    weight: float  # this signal's weight in the score, 0.0-1.0
+    contribution: float  # value * weight, 0.0-1.0 (points of the final score)
+    detail: str = ""  # plain-language explanation of where `value` came from
+
+
 class RagResponse(BaseModel):
     answer_text: str  # the generated answer, unverified
     used_chunks: list[RetrievedChunkRef]  # every chunk actually passed into the prompt
@@ -74,14 +89,17 @@ class RagResponse(BaseModel):
 
     # CONF-01/05: the confidence badge contract (build spec §9). The
     # frontend renders a 4-state badge (HIGH/MEDIUM/LOW/ABSTAIN) off this
-    # one field — default is deliberately "low", not "high": an unset
-    # confidence should never silently read as reassuring.
+    # one field. Default is "high" on purpose (see test_confidence.py): every
+    # path that reaches the user is set explicitly -- either by
+    # evaluate_confidence() or by the no-chunks abstain branch below.
     confidence: Literal["high", "medium", "low", "abstain"] = "high"
     confidence_reason: str | None = None
     # Numeric companion to `confidence` — a transparent weighted score in
     # [0.0, 1.0], added after pitch-round feedback asking to show confidence
     # mathematically, not just as a badge. Computed in confidence.py.
     confidence_score: float = 0.0
+    # The three weighted signals behind confidence_score, for the UI chart.
+    confidence_breakdown: list[ConfidenceComponent] = []
 
 
 def _build_prompt(
