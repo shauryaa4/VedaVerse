@@ -51,8 +51,10 @@ build spec section 18):
     because no such list is loaded as data anywhere in this codebase.
 """
 
-from backend.models.abs_models import ABSAssessment
+from backend.models.abs_models import ABSAssessment, ABSCitation
 from backend.models.pip import ProductIntelligenceProfile
+from backend.logic.citation_verification import score_overlap, OVERLAP_SUPPORT_THRESHOLD
+from backend.services.vector_store import query as vector_query
 
 _INDIA_KEYWORDS = ("india", "bharat", "indian")
 _NON_INDIA_HINTS = ("imported", "sourced from outside india", "not india", "abroad", "outside india")
@@ -256,4 +258,81 @@ def _apply_ip_filing_flag(pip: ProductIntelligenceProfile, assessment: ABSAssess
         "applies in addition to, and separately from, any access/utilisation approval "
         "under s.3-3A or s.7 above."
     )
+    return assessment
+
+
+# ---------------------------------------------------------------------------
+# ABS-03 — citation grounding (retrieval + verification, added AFTER the
+# deterministic engine above; does not change assess_abs()'s behavior or its
+# existing 8-test coverage).
+# ---------------------------------------------------------------------------
+
+# ABS only ever reasons about the Biological Diversity Act / Rules, which the
+# rest of the app already tags "biodiversity_abs" (see routing.py's module
+# docstring for the frozen legal_regime vocabulary). Hardcoded rather than
+# derived from routing.route(), since ABS doesn't go through routing at all
+# (see the audit) — this is the one regime ABS's own reasoning ever touches.
+_ABS_LEGAL_REGIME = "biodiversity_abs"
+
+
+def ground_abs_citations(assessment: ABSAssessment, collection, top_k: int = 1) -> ABSAssessment:
+    """
+    ABS-03: for each line already in assessment.reasoning, retrieve the
+    closest-matching biodiversity_abs chunk from the SAME Chroma collection
+    RAG-03 uses, and score it with the SAME overlap check CITE-03 uses on
+    RAG answers (backend.logic.citation_verification.score_overlap) —
+    reusing the existing, tested verification logic rather than inventing a
+    second one for ABS.
+
+    Deliberately separate from assess_abs(): the deterministic rule engine
+    stays collection-free and pure (so its 8 existing tests need no Chroma
+    instance and keep passing unmodified); this function is an additive,
+    optional step routes/abs_routes.py calls afterward. If `collection` is
+    None, or retrieval/scoring fails for any single line, that line is
+    simply left ungrounded (no citation appended, no exception raised) —
+    an ungrounded reasoning line is a normal, visible outcome (see
+    ABSCitation's docstring), not a fatal error for the whole assessment.
+
+    Mutates and returns the same `assessment` object (same convenience
+    pattern as classification.py's apply_classification_to_pip).
+    """
+    if collection is None:
+        return assessment
+
+    for reasoning_text in assessment.reasoning:
+        try:
+            results = vector_query(
+                collection,
+                reasoning_text,
+                where={"legal_regime": _ABS_LEGAL_REGIME},
+                top_k=top_k,
+            )
+        except Exception:
+            # Retrieval failure for one line should never break the whole
+            # assessment — same "abstain, don't crash" philosophy as
+            # rag/generation.py's own no-chunks-found path.
+            continue
+
+        ids = results.get("ids", [[]])[0]
+        documents = results.get("documents", [[]])[0]
+        metadatas = results.get("metadatas", [[]])[0]
+        if not ids:
+            continue
+
+        chunk_text = documents[0]
+        meta = metadatas[0]
+        score = score_overlap(reasoning_text, chunk_text)
+
+        assessment.citations.append(
+            ABSCitation(
+                reasoning_text=reasoning_text,
+                doc_id=meta.get("doc_id") or None,
+                document_name=meta.get("document_name") or None,
+                section_or_article=meta.get("section_or_article") or None,
+                source_url=meta.get("source_url") or None,
+                excerpt=chunk_text,
+                verified=score >= OVERLAP_SUPPORT_THRESHOLD,
+            )
+        )
+
     return assessment

@@ -38,11 +38,39 @@ from pydantic import BaseModel, Field
 ABSRelevance = Literal["likely", "possible", "unlikely", "not_applicable"]
 
 
+class ABSCitation(BaseModel):
+    """
+    ABS-03 — links one line of ABSAssessment.reasoning to the specific legal
+    corpus chunk it's grounded in, verified the same way RAG-03 answers are
+    (backend/logic/citation_verification.py's score_overlap), instead of the
+    reasoning text being an unsupported assertion about what the BD Act says.
+
+    `verified=False` is a normal, expected outcome (e.g. a disclaimer/caveat
+    sentence in `reasoning` that isn't itself a legal claim, or a claim the
+    current corpus doesn't have a strong-matching chunk for) — it means
+    "don't treat this particular line as source-backed," not an error.
+    """
+
+    reasoning_text: str  # the exact backend.models.abs_models.ABSAssessment.reasoning entry this grounds
+    doc_id: Optional[str] = None
+    document_name: Optional[str] = None
+    section_or_article: Optional[str] = None
+    source_url: Optional[str] = None
+    excerpt: Optional[str] = None
+    verified: bool = False
+
+
 class ABSAssessment(BaseModel):
     """The ABS-aware decision-support read-out for one Product Intelligence Profile."""
 
     relevance: ABSRelevance
     reasoning: list[str] = Field(default_factory=list)
+
+    # ABS-03: populated by logic.abs_helper.ground_abs_citations() as a
+    # separate, optional post-processing step — assess_abs() itself stays
+    # pure/deterministic/collection-free so its existing 8 tests are
+    # untouched. Empty when grounding wasn't run (e.g. no collection passed).
+    citations: list[ABSCitation] = Field(default_factory=list)
 
     # Plain-language pointer to WHICH body would typically be approached (NBA vs
     # SBB) — never a claim that either was actually contacted or would approve.

@@ -119,6 +119,27 @@ def query(collection: Collection, query_text: str, where: Optional[dict] = None,
     return collection.query(**kwargs)
 
 
+_default_client: Optional[chromadb.ClientAPI] = None
+_default_collection: Optional[Collection] = None
+
+
+def get_default_collection(persist_directory: str = "./chroma_data") -> Collection:
+    """
+    ABS-03: shared lazy singleton for callers that need a collection but
+    aren't the main /query route (which already keeps its own private
+    singleton in routes/query.py — left untouched, not worth the risk of
+    touching a working, tested route for this).
+
+    Same lazy-on-first-use pattern: importing this module never touches
+    disk; only the first real call to get_default_collection() does.
+    """
+    global _default_client, _default_collection
+    if _default_collection is None:
+        _default_client = get_client(persist_directory)
+        _default_collection = get_or_create_collection(_default_client)
+    return _default_collection
+
+
 def ingest_directory(corpus_root: Path, persist_directory: str = "./chroma_data",
                       collection_name: str = DEFAULT_COLLECTION_NAME) -> int:
     """Convenience wrapper: chunk a directory tree and load it straight into Chroma.
