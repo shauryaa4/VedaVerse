@@ -29,7 +29,7 @@ def test_citation_forced_abstain_always_wins():
         status_notes=[],
     )
     assert decision == "abstain"
-    assert level == "low"
+    assert level == "abstain"
 
 
 def test_low_confidence_and_low_support_aborts():
@@ -40,7 +40,7 @@ def test_low_confidence_and_low_support_aborts():
         status_notes=[],
     )
     assert decision == "abstain"
-    assert level == "low"
+    assert level == "abstain"
     assert "low" in reason.lower()
 
 
@@ -112,7 +112,7 @@ def test_missing_confidence_is_treated_as_low():
         status_notes=[],
     )
     assert decision == "abstain"  # same as explicit "low" + low support
-    assert level == "low"
+    assert level == "abstain"
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +177,7 @@ def test_evaluate_confidence_reads_status_notes_from_response():
     assert result.confidence_reason is not None
 
 
-def test_evaluate_confidence_abstain_path_sets_low_confidence():
+def test_evaluate_confidence_abstain_path_sets_abstain_level():
     response = _make_response()
     result = evaluate_confidence(
         classification_confidence="low",
@@ -186,7 +186,7 @@ def test_evaluate_confidence_abstain_path_sets_low_confidence():
         rag_response=response,
     )
     assert result.abstained is True
-    assert result.confidence == "low"
+    assert result.confidence == "abstain"
 
 
 # ---------------------------------------------------------------------------
@@ -219,9 +219,48 @@ def test_score_known_values():
     assert compute_confidence_score(None, 0.0, 0) == 0.09
 
 
-def test_source_coverage_caps_at_full_credit():
-    sources = [c for c in compute_confidence_breakdown("high", 1.0, 5) if c.key == "sources"][0]
-    assert sources.value == 1.0
+def test_retrieved_evidence_coverage_caps_at_full_credit():
+    coverage = [
+        c
+        for c in compute_confidence_breakdown("high", 1.0, 5)
+        if c.label == "Retrieved Evidence Coverage"
+    ][0]
+    assert coverage.value == 1.0
+
+
+def test_component_labels_are_canonical():
+    breakdown = compute_confidence_breakdown("high", 1.0, 2)
+    assert [c.label for c in breakdown] == [
+        "Citation Support",
+        "Classification Certainty",
+        "Retrieved Evidence Coverage",
+    ]
+    assert all(c.label != "Independent Source Coverage" for c in breakdown)
+
+
+def test_citation_support_is_independent_of_classification():
+    high = evaluate_confidence("high", 0.8, False, _make_response())
+    low = evaluate_confidence("low", 0.8, False, _make_response())
+    assert high.citation_support_score == low.citation_support_score == 0.8
+    assert high.confidence_score != low.confidence_score
+
+
+def test_classification_changes_system_score_for_same_other_inputs():
+    scores = [
+        compute_confidence_score(level, 0.8, 1)
+        for level in ("high", "medium", "low")
+    ]
+    assert len(set(scores)) == 3
+
+
+def test_abstention_is_not_overridden_by_high_numeric_score():
+    result = evaluate_confidence("high", 1.0, True, _make_response())
+    assert result.confidence == "abstain"
+    assert result.abstained is True
+    assert result.answer_text == ""
+    assert result.confidence_score == 1.0
+    assert result.confidence_score_label == "System Confidence Score"
+    assert "not a probability" in result.confidence_score_explanation
 
 
 def test_evaluate_confidence_fills_score_and_breakdown():

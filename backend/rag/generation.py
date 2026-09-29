@@ -102,7 +102,7 @@ class ConfidenceComponent(BaseModel):
     """
 
     key: str
-    # "citation_support" | "classification" | "sources"
+    # "citation_support" | "classification" | "retrieved_evidence_coverage"
 
     label: str
     # Human-readable name for the chart row.
@@ -118,6 +118,9 @@ class ConfidenceComponent(BaseModel):
 
     detail: str = ""
     # Plain-language explanation of where value came from.
+
+    explanation: str = ""
+    # Meaning of this metric; all values are heuristic pipeline/evidence signals.
 
 
 # ----------------------------------------------------------------------
@@ -204,10 +207,26 @@ class RagResponse(BaseModel):
 
     confidence_reason: str | None = None
 
-    # Numeric companion to confidence.
+    # System Confidence Score: heuristic pipeline-support measure, never a
+    # probability that the legal conclusion is correct.
     confidence_score: float = 0.0
 
-    # Three weighted signals behind confidence_score.
+    confidence_score_label: Literal["System Confidence Score"] = "System Confidence Score"
+    confidence_score_explanation: str = (
+        "Heuristic measure of how strongly the current pipeline supports "
+        "returning this result. It is not a probability that the legal "
+        "conclusion is correct."
+    )
+
+    # Citation Support Score remains an independently exposed answer-level metric.
+    citation_support_score: float = 0.0
+    citation_support_label: Literal["Citation Support Score"] = "Citation Support Score"
+    citation_support_explanation: str = (
+        "Percentage of answer claims supported by the retrieved legal evidence "
+        "under the citation-verification rules."
+    )
+
+    # Three weighted pipeline-support signals behind confidence_score.
     confidence_breakdown: list[ConfidenceComponent] = Field(
         default_factory=list
     )
@@ -463,7 +482,7 @@ def answer_query(
         status_notes=[
             "Legal reasoning was not performed because jurisdiction is unknown."
         ],
-        confidence="low",
+        confidence="abstain",
         confidence_reason="Jurisdiction is missing.",
         confidence_score=0.0,
         confidence_breakdown=[],

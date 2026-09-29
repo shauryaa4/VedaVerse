@@ -242,6 +242,14 @@ def test_calculate_support_score_three_of_five_supported():
     assert calculate_support_score(classifications) == 0.6
 
 
+def test_calculate_support_score_counts_only_supported_in_five_claim_denominator():
+    assert calculate_support_score(["SUPPORTED"] * 5) == 1.0
+    assert calculate_support_score(
+        ["SUPPORTED", "SUPPORTED", "UNSUPPORTED", "SUPPORTED", "UNCITED"]
+    ) == 0.6
+    assert calculate_support_score(["UNSUPPORTED", "UNCITED", "UNSUPPORTED", "UNCITED", "UNSUPPORTED"]) == 0.0
+
+
 def test_calculate_support_score_all_supported():
     classifications = [
         "SUPPORTED",
@@ -358,4 +366,4 @@ def test_near_empty_remaining_answer_triggers_abstention():
     assert filtered_answer == "Yes [IN-1:3]."
     assert should_abstain is True
 
-    
+

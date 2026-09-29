@@ -23,6 +23,12 @@ class CitationResponse(BaseModel):
     section: str
     excerpt_text: str
     verified: bool
+    citation_overlap_score: float = 0.0
+    citation_overlap_label: str = "Citation Overlap Score"
+    citation_overlap_explanation: str = (
+        "Proportion of meaningful claim keywords found in the cited retrieved "
+        "chunk. This is a lexical heuristic, not semantic or legal correctness."
+    )
 
 
 @router.get(

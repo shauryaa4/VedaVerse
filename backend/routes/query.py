@@ -144,6 +144,7 @@ def _cache_citations(
             section=matching_chunk.section_or_article or "",
             excerpt_text=matching_chunk.text,
             verified=(classification == "SUPPORTED"),
+            overlap_score=score,
         )
 
     return classifications

@@ -37,6 +37,9 @@ def test_citation_endpoint_returns_cached_citation():
         "section": "3(p)",
         "excerpt_text": "traditional knowledge exclusion text",
         "verified": True,
+        "citation_overlap_score": 0.0,
+        "citation_overlap_label": "Citation Overlap Score",
+        "citation_overlap_explanation": "Proportion of meaningful claim keywords found in the cited retrieved chunk. This is a lexical heuristic, not semantic or legal correctness.",
     }
 
 

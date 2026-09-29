@@ -63,7 +63,7 @@ HEDGE_DISCLAIMER = (
 # ---------------------------------------------------------------------------
 
 
-ConfidenceLevel = Literal["high", "medium", "low"]
+ConfidenceLevel = Literal["high", "medium", "low", "abstain"]
 
 
 def compute_confidence_decision(
@@ -99,7 +99,7 @@ def compute_confidence_decision(
     if citation_forced_abstain:
         return (
             "abstain",
-            "low",
+            "abstain",
             (
                 "The generated answer had too little citation-supported content "
                 "remaining after verification to return safely."
@@ -109,7 +109,7 @@ def compute_confidence_decision(
     if confidence == "low" and citation_support_score < SUPPORT_SCORE_ABSTAIN_BELOW:
         return (
             "abstain",
-            "low",
+            "abstain",
             (
                 f"Classification confidence was low and only "
                 f"{citation_support_score:.0%} of the answer's claims were "
@@ -186,32 +186,34 @@ def apply_confidence_decision(
 
 _WEIGHT_CITATION = 0.5
 _WEIGHT_CLASSIFICATION = 0.3
-_WEIGHT_SOURCES = 0.2
+_WEIGHT_EVIDENCE_COVERAGE = 0.2
 _CONFIDENCE_ANCHOR = {"high": 1.0, "medium": 0.6, "low": 0.3}
 
 
 def compute_confidence_breakdown(
     classification_confidence: Optional[Confidence],
     citation_support_score: float,
-    source_count: int,
+    used_chunk_count: int,
 ) -> list[ConfidenceComponent]:
     """
     The three real signals behind the numeric score, each with its raw value,
     weight and contribution -- so the UI can draw exactly how the number was
     built instead of showing a single unexplained percentage.
-      - 50%: citation support  -- fraction of the answer's claims that
-        verified against retrieved legal text (CITE-05).
-      - 30%: classification    -- how certain the deterministic rule engine
-        (CLS-01) was about the product category.
-      - 20%: source coverage   -- how many independent retrieved chunks the
-        answer drew from; 2+ counts as full credit.
+      - 50%: Citation Support -- percentage of answer claims supported by
+        retrieved evidence under current citation-verification rules.
+      - 30%: Classification Certainty -- the classifier's category converted
+        to a normalized heuristic anchor, not a probability.
+      - 20%: Retrieved Evidence Coverage -- based on used chunk count; 2+
+        chunks reaches full value and does not imply source independence.
+    The resulting System Confidence Score measures pipeline support, not
+    probability of legal correctness.
     """
     level = classification_confidence or "low"
     citation_value = max(0.0, min(float(citation_support_score), 1.0))
     classification_value = _CONFIDENCE_ANCHOR.get(level, 0.3)
-    sources_value = min(source_count / 2, 1.0)
+    evidence_coverage_value = min(max(used_chunk_count, 0) / 2, 1.0)
 
-    def _component(key, label, value, weight, detail):
+    def _component(key, label, value, weight, detail, explanation):
         return ConfidenceComponent(
             key=key,
             label=label,
@@ -219,29 +221,33 @@ def compute_confidence_breakdown(
             weight=weight,
             contribution=value * weight,
             detail=detail,
+            explanation=explanation,
         )
 
     return [
         _component(
             "citation_support",
-            "Citation support",
+            "Citation Support",
             citation_value,
             _WEIGHT_CITATION,
-            f"{citation_value:.0%} of the answer's claims verified against retrieved law",
+            f"{citation_value:.0%} of answer claims supported by retrieved legal evidence under citation-verification rules",
+            "Percentage of answer claims supported by the retrieved legal evidence under the citation-verification rules.",
         ),
         _component(
             "classification",
-            "Classification certainty",
+            "Classification Certainty",
             classification_value,
             _WEIGHT_CLASSIFICATION,
             f"Rule engine confidence was {level}",
+            "Confidence category produced by the classification pipeline, converted to a normalized heuristic value for the overall system score.",
         ),
         _component(
-            "sources",
-            "Source coverage",
-            sources_value,
-            _WEIGHT_SOURCES,
-            f"{source_count} independent source{'s' if source_count != 1 else ''} used",
+            "retrieved_evidence_coverage",
+            "Retrieved Evidence Coverage",
+            evidence_coverage_value,
+            _WEIGHT_EVIDENCE_COVERAGE,
+            f"Heuristic coverage based on {used_chunk_count} retrieved chunk(s) used",
+            "Heuristic measure of how much retrieved evidence is available to support the generated result, based on the evidence currently used by the pipeline.",
         ),
     ]
 
@@ -253,12 +259,12 @@ def _score_from_breakdown(breakdown: list[ConfidenceComponent]) -> float:
 def compute_confidence_score(
     classification_confidence: Optional[Confidence],
     citation_support_score: float,
-    source_count: int,
+    used_chunk_count: int,
 ) -> float:
     """Weighted sum of the three signals in compute_confidence_breakdown()."""
     return _score_from_breakdown(
         compute_confidence_breakdown(
-            classification_confidence, citation_support_score, source_count
+            classification_confidence, citation_support_score, used_chunk_count
         )
     )
 
@@ -287,6 +293,7 @@ def evaluate_confidence(
         rag_response.status_notes,
     )
     rag_response = apply_confidence_decision(rag_response, decision, level, reason)
+    rag_response.citation_support_score = max(0.0, min(float(citation_support_score), 1.0))
 
     breakdown = compute_confidence_breakdown(
         classification_confidence,

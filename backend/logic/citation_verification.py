@@ -187,7 +187,10 @@ def _keywords(text: str) -> set[str]:
 
 def score_overlap(sentence: str, chunk_text: Optional[str]) -> float:
     """
-    CITE-03: calculate a lightweight keyword-overlap support score.
+    Citation Overlap Score: a claim-level lexical heuristic, not semantic
+    truth, legal correctness, or a probability of correctness.
+
+    CITE-03: calculate a lightweight keyword-overlap score.
 
     The score is:
 
@@ -264,6 +267,10 @@ def classify_citation_support(
 
 def calculate_support_score(classifications: List[str]) -> float:
     """
+    Citation Support Score: percentage of answer claims supported by retrieved
+    legal evidence under current citation-verification rules. This is an
+    answer-level evidence metric, not legal correctness.
+
     CITE-05: calculate the proportion of claim sentences that are supported.
 
     The score is:

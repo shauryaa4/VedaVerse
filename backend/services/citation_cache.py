@@ -22,6 +22,7 @@ def store_citation(
     section: str,
     excerpt_text: str,
     verified: bool,
+    overlap_score: float = 0.0,
 ) -> None:
     """Store the result of citation verification for a session."""
 
@@ -32,6 +33,13 @@ def store_citation(
         "section": section,
         "excerpt_text": excerpt_text,
         "verified": verified,
+        "citation_overlap_score": max(0.0, min(float(overlap_score), 1.0)),
+        "citation_overlap_label": "Citation Overlap Score",
+        "citation_overlap_explanation": (
+            "Proportion of meaningful claim keywords found in the cited "
+            "retrieved chunk. This is a lexical heuristic, not semantic or "
+            "legal correctness."
+        ),
     }
 
 
