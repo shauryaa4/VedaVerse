@@ -2,18 +2,31 @@
 RAG-03 — the real /query HTTP endpoint.
 
 Deliberately thin: all the actual logic lives in backend.rag.generation.
+
 This file's only job is turning an HTTP request into a call to
 answer_query() and the result back into an HTTP response. Keeping the
 Chroma collection at module scope (not per-request) avoids reopening the
 persistent client on every single call, which is unnecessary the moment
 there's real traffic to handle (even hackathon-demo traffic).
+
+Language handling:
+- Request languages are validated against the canonical language config.
+- Input is translated to English before legal/RAG reasoning.
+- Legal reasoning is never performed on an untranslated multilingual input.
+- Citation verification and confidence evaluation happen before output
+  localization.
+- Output is translated only after the verified legal answer is finalized.
+- If input translation fails, legal/RAG reasoning is not performed.
+- If output translation fails, the verified English answer is preserved.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
+from backend.logic.languages import normalize_language_code
 from backend.models.pip import ProductIntelligenceProfile
 from backend.rag.generation import RagResponse, answer_query
+
 from backend.logic.citation_verification import (
     calculate_support_score,
     classify_citation_support,
@@ -22,33 +35,50 @@ from backend.logic.citation_verification import (
     score_overlap,
     strip_unsupported_sentences,
 )
+
 from backend.rag.confidence import evaluate_confidence
 from backend.services.citation_cache import store_citation
 from backend.services.pip_session_store import get_session
-from backend.services.vector_store import get_client, get_or_create_collection
+from backend.services.vector_store import (
+    get_client,
+    get_or_create_collection,
+)
 from backend.db.query_log import log_query
+
 from backend.logic.language import (
+    TranslationError,
     translate_to_english,
     translate_from_english,
 )
-from backend.routes.auth import ensure_session_access, optional_current_user
+
+from backend.routes.auth import (
+    ensure_session_access,
+    optional_current_user,
+)
+
 
 router = APIRouter()
+
 
 _PERSIST_DIR = "./chroma_data"
 _collection = None
 
 
 def _get_collection():
-    """Lazy singleton — the Chroma collection is opened once, on first real
-    request, not at import time (so importing this module in tests never
-    touches disk unless a test actually calls the endpoint)."""
+    """
+    Lazy singleton — the Chroma collection is opened once, on first real
+    request, not at import time.
+
+    This means importing this module in tests never touches disk unless
+    a test actually calls the endpoint.
+    """
     global _collection
+
     if _collection is None:
         client = get_client(_PERSIST_DIR)
         _collection = get_or_create_collection(client)
-    return _collection
 
+    return _collection
 
 
 def _cache_citations(
@@ -56,14 +86,15 @@ def _cache_citations(
     rag_response: RagResponse,
 ) -> list[str]:
     """
-    Runs the existing citation verification pipeline on the generated answer
-    and stores citation details for the CITE-07 endpoint.
+    Runs the existing citation verification pipeline on the generated
+    answer and stores citation details for the CITE-07 endpoint.
 
     Returns one classification for every sentence, in the same order as
-    CITE-01 sentence extraction. This keeps the classifications aligned with
-    CITE-06 sentence stripping.
+    CITE-01 sentence extraction. This keeps the classifications aligned
+    with CITE-06 sentence stripping.
     """
     pairs = extract_claim_citation_pairs(rag_response.answer_text)
+
     classifications = []
 
     for sentence, citation_id in pairs:
@@ -105,7 +136,11 @@ def _cache_citations(
         store_citation(
             session_id=session_id,
             citation_id=citation_id,
-            doc_name=matching_chunk.document_name or matching_chunk.doc_id or "Unknown",
+            doc_name=(
+                matching_chunk.document_name
+                or matching_chunk.doc_id
+                or "Unknown"
+            ),
             section=matching_chunk.section_or_article or "",
             excerpt_text=matching_chunk.text,
             verified=(classification == "SUPPORTED"),
@@ -115,57 +150,138 @@ def _cache_citations(
 
 
 class QueryRequest(BaseModel):
+    """
+    Request model for POST /query.
+
+    Either session_id or pip must be supplied.
+
+    language is normalized through the canonical language configuration
+    before any translation or legal reasoning occurs.
+    """
+
     session_id: str | None = None
     pip: ProductIntelligenceProfile | None = None
     question: str
     language: str = "en"
 
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        return normalize_language_code(value)
 
-@router.post("/query", response_model=RagResponse)
-def query_endpoint(request: QueryRequest, user: dict | None = Depends(optional_current_user)) -> RagResponse:
+
+@router.post(
+    "/query",
+    response_model=RagResponse,
+)
+def query_endpoint(
+    request: QueryRequest,
+    user: dict | None = Depends(optional_current_user),
+) -> RagResponse:
+
     if request.session_id is not None:
-        ensure_session_access(request.session_id, user)
+        ensure_session_access(
+            request.session_id,
+            user,
+        )
+
         pip = get_session(request.session_id)
+
         if pip is None:
             raise HTTPException(
-                status_code=404, detail="Unknown session_id. Call POST /session first."
+                status_code=404,
+                detail="Unknown session_id. Call POST /session first.",
             )
+
     elif request.pip is not None:
         pip = request.pip
+
     else:
-        raise HTTPException(status_code=422, detail="Provide either session_id or pip.")
+        raise HTTPException(
+            status_code=422,
+            detail="Provide either session_id or pip.",
+        )
 
     try:
-        english_question = translate_to_english(
-            request.question,
-            request.language,
-        )
+        # --------------------------------------------------------------
+        # LANGUAGE LAYER — INPUT
+        # --------------------------------------------------------------
+        # Translate the user's original question into English before
+        # sending it to legal/RAG reasoning.
+        #
+        # If translation fails, answer_query() is never called.
+        # --------------------------------------------------------------
+
+        try:
+            english_question = translate_to_english(
+                request.question,
+                request.language,
+            )
+
+        except TranslationError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail={
+                    "code": "LANGUAGE_PROCESSING_FAILED",
+                    "message": str(exc),
+                    "original_text": request.question,
+                    "language": request.language,
+                },
+            ) from exc
+
+        # --------------------------------------------------------------
+        # LEGAL / RAG LAYER
+        # --------------------------------------------------------------
+        # From this point onward, legal reasoning receives only the
+        # English normalized question.
+        # --------------------------------------------------------------
 
         result = answer_query(
             pip,
             english_question,
             _get_collection(),
+            original_text=request.question,
+            detected_language=request.language,
+            translation_status=(
+                "not_required"
+                if request.language == "en"
+                else "translated"
+            ),
         )
 
         classifications = []
 
         if not result.abstained:
+
+            # ----------------------------------------------------------
+            # CITATION VERIFICATION
+            # ----------------------------------------------------------
+
             classifications = _cache_citations(
                 pip.session_id,
                 result,
             )
 
-            filtered_answer, citation_forced_abstain = strip_unsupported_sentences(
-                result.answer_text,
-                classifications,
+            filtered_answer, citation_forced_abstain = (
+                strip_unsupported_sentences(
+                    result.answer_text,
+                    classifications,
+                )
             )
 
             result.answer_text = filtered_answer
 
-            # CONF-01->05: combine classification confidence + citation
-            # support + routing status_notes into the final answer/hedge/
-            # abstain decision.
-            citation_support_score = calculate_support_score(classifications)
+            # ----------------------------------------------------------
+            # CONFIDENCE / ABSTENTION
+            # ----------------------------------------------------------
+            # Combine classification confidence, citation support, and
+            # routing status into the final answer/hedge/abstain decision.
+            # ----------------------------------------------------------
+
+            citation_support_score = calculate_support_score(
+                classifications
+            )
+
             result = evaluate_confidence(
                 pip.classification.confidence,
                 citation_support_score,
@@ -173,19 +289,48 @@ def query_endpoint(request: QueryRequest, user: dict | None = Depends(optional_c
                 result,
             )
 
-            # LANGUAGE LAYER:
-            # Translation happens only after citation verification and
+            # ----------------------------------------------------------
+            # LANGUAGE LAYER — OUTPUT
+            # ----------------------------------------------------------
+            # Translation happens ONLY after citation verification and
             # confidence/abstention processing are complete.
-            # Citation/confidence checks can deliberately abstain and clear
-            # answer_text. Never send that empty text to the translation API.
-            if not result.abstained and result.answer_text.strip():
-                result.answer_text = translate_from_english(
-                    result.answer_text,
-                    request.language,
-                )
+            #
+            # If output translation fails, DO NOT discard the verified
+            # English answer. Keep it and explicitly mark the translation
+            # failure.
+            # ----------------------------------------------------------
 
-        # API-04: log every query for post-demo debugging. Never let a
-        # logging failure break the actual response the user is waiting on.
+            if (
+                not result.abstained
+                and result.answer_text.strip()
+            ):
+                try:
+                    result.answer_text = translate_from_english(
+                        result.answer_text,
+                        request.language,
+                    )
+
+                except TranslationError as exc:
+                    result.translation_status = (
+                        "output_translation_failed"
+                    )
+
+                    result.status_notes.append(
+                        "The verified legal answer could not be "
+                        "localized. The verified English answer is "
+                        "shown instead."
+                    )
+
+                    print(
+                        f"[language] output translation failed: {exc}"
+                    )
+
+        # --------------------------------------------------------------
+        # QUERY LOGGING
+        # --------------------------------------------------------------
+        # Logging must never break the actual user response.
+        # --------------------------------------------------------------
+
         try:
             log_query(
                 session_id=pip.session_id,
@@ -194,18 +339,31 @@ def query_endpoint(request: QueryRequest, user: dict | None = Depends(optional_c
                 category=pip.classification.category,
                 objectives=list(pip.objective),
                 where_clause=result.retrieval_where_clause,
-                used_chunk_ids=[c.chunk_id for c in result.used_chunks],
+                used_chunk_ids=[
+                    c.chunk_id
+                    for c in result.used_chunks
+                ],
                 answer_text=result.answer_text,
                 abstained=result.abstained,
                 abstain_reason=result.abstain_reason,
             )
+
         except Exception as log_error:
-            print(f"[query_log] failed to log query (non-fatal): {log_error}")
+            print(
+                f"[query_log] failed to log query "
+                f"(non-fatal): {log_error}"
+            )
 
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(
+            status_code=422,
+            detail=str(e),
+        )
 
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )

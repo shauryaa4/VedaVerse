@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-import base64
 import os
+import re
 
 import requests
 from dotenv import load_dotenv
+
+from backend.logic.languages import (
+    TRANSLATION_SERVICE_ID,
+    UnsupportedLanguageError,
+    normalize_language_code,
+)
 
 
 load_dotenv()
@@ -14,34 +20,11 @@ BHASHINI_URL = (
     "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
 )
 
-TRANSLATION_SERVICE_ID = "bhashini/iiith/nmt-all"
 
+class TranslationError(RuntimeError):
+    """Raised when Bhashini translation cannot be completed."""
 
-_SUPPORTED_LANGUAGES = {
-    "en": "English",
-    "hi": "Hindi",
-    "bn": "Bengali",
-    "ta": "Tamil",
-    "te": "Telugu",
-    "mr": "Marathi",
-    "gu": "Gujarati",
-    "kn": "Kannada",
-    "ml": "Malayalam",
-    "pa": "Punjabi",
-    "or": "Odia",
-    "ur": "Urdu",
-    "as": "Assamese",
-    "sa": "Sanskrit",
-    "mai": "Maithili",
-    "kok": "Konkani",
-    "doi": "Dogri",
-    "mni": "Manipuri",
-    "sat": "Santali",
-    "ks": "Kashmiri",
-    "sd": "Sindhi",
-    "ne": "Nepali",
-    "brx": "Bodo",
-}
+    pass
 
 
 def _get_api_key() -> str:
@@ -53,7 +36,7 @@ def _get_api_key() -> str:
     api_key = os.getenv("BHASHINI_INFERENCE_KEY")
 
     if not api_key:
-        raise RuntimeError(
+        raise TranslationError(
             "BHASHINI_INFERENCE_KEY is not configured."
         )
 
@@ -62,69 +45,88 @@ def _get_api_key() -> str:
 
 def _validate_language(language: str) -> str:
     """
-    Validate and normalize a Bhashini language code.
+    Validate and normalize a supported language code.
+
+    Examples:
+        hi     -> hi
+        hi-IN  -> hi
+        en_US  -> en
+
+    Unsupported languages raise UnsupportedLanguageError.
     """
 
-    language = language.lower().strip()
-
-    if language not in _SUPPORTED_LANGUAGES:
-        # Fall back to English if an unsupported code is provided
-        return "en"
-
-    return language
+    return normalize_language_code(language)
 
 
 def detect_text_language(text: str) -> str:
     """
-    Detect language of input text using Unicode script ranges (TLD).
-    Returns Bhashini language code (e.g. 'hi', 'ta', 'bn', 'te', 'mr', 'gu', 'kn', 'ml', 'en').
+    Detect the language of text using Unicode script ranges.
+
+    This is a lightweight script detector, not a legal or
+    semantic classifier.
+
+    When no supported Indian-language script is detected,
+    English is returned as the default.
     """
+
     if not text or not text.strip():
         return "en"
 
-    # Count characters in Unicode script ranges
     counts = {
-        "hi": 0,  # Devanagari (Hindi / Marathi)
-        "bn": 0,  # Bengali / Assamese
-        "pa": 0,  # Gurmukhi / Punjabi
-        "gu": 0,  # Gujarati
-        "or": 0,  # Odia
-        "ta": 0,  # Tamil
-        "te": 0,  # Telugu
-        "kn": 0,  # Kannada
-        "ml": 0,  # Malayalam
-        "ur": 0,  # Urdu / Arabic script
+        "hi": 0,
+        "bn": 0,
+        "pa": 0,
+        "gu": 0,
+        "or": 0,
+        "ta": 0,
+        "te": 0,
+        "kn": 0,
+        "ml": 0,
+        "ur": 0,
     }
 
     for char in text:
         cp = ord(char)
+
         if 0x0900 <= cp <= 0x097F:
             counts["hi"] += 1
+
         elif 0x0980 <= cp <= 0x09FF:
             counts["bn"] += 1
+
         elif 0x0A00 <= cp <= 0x0A7F:
             counts["pa"] += 1
+
         elif 0x0A80 <= cp <= 0x0AFF:
             counts["gu"] += 1
+
         elif 0x0B00 <= cp <= 0x0B7F:
             counts["or"] += 1
+
         elif 0x0B80 <= cp <= 0x0BFF:
             counts["ta"] += 1
+
         elif 0x0C00 <= cp <= 0x0C7F:
             counts["te"] += 1
+
         elif 0x0C80 <= cp <= 0x0CFF:
             counts["kn"] += 1
+
         elif 0x0D00 <= cp <= 0x0D7F:
             counts["ml"] += 1
+
         elif 0x0600 <= cp <= 0x06FF:
             counts["ur"] += 1
 
-    best_lang, best_count = max(counts.items(), key=lambda x: x[1])
+    best_lang, best_count = max(
+        counts.items(),
+        key=lambda item: item[1],
+    )
+
     if best_count > 0:
         return best_lang
 
     return "en"
-
 
 
 def _translate(
@@ -134,15 +136,22 @@ def _translate(
 ) -> str:
     """
     Perform one Bhashini translation request.
+
+    This function is responsible only for language
+    translation. It does not perform classification,
+    legal reasoning, routing, retrieval, or decision making.
     """
 
-    if not text.strip():
+    if not isinstance(text, str) or not text.strip():
         raise ValueError("Text cannot be empty.")
 
-    source_language = _validate_language(source_language)
-    target_language = _validate_language(target_language)
+    try:
+        source_language = _validate_language(source_language)
+        target_language = _validate_language(target_language)
+    except UnsupportedLanguageError:
+        raise
 
-    # No API call is needed when source and target are identical.
+    # No API call is required when source and target are identical.
     if source_language == target_language:
         return text
 
@@ -176,41 +185,47 @@ def _translate(
         "Accept": "*/*",
     }
 
-    response = requests.post(
-        BHASHINI_URL,
-        headers=headers,
-        json=payload,
-        timeout=60,
-    )
+    try:
+        response = requests.post(
+            BHASHINI_URL,
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    data = response.json()
+        data = response.json()
+
+    except requests.RequestException as exc:
+        raise TranslationError(
+            f"Bhashini translation request failed: {exc}"
+        ) from exc
+
+    except ValueError as exc:
+        raise TranslationError(
+            "Bhashini returned an invalid JSON response."
+        ) from exc
 
     pipeline_response = data.get("pipelineResponse", [])
 
     if not pipeline_response:
-        raise RuntimeError(
+        raise TranslationError(
             "Bhashini translation returned no pipeline response."
         )
 
     output = pipeline_response[0].get("output")
 
     if not output:
-        raise RuntimeError(
+        raise TranslationError(
             "Bhashini translation returned no output."
         )
 
     translated = output[0].get("target")
 
     if not translated:
-        # Some Bhashini translation responses may expose
-        # the translated text under a different field.
-        # Keep this explicit rather than silently returning
-        # an incorrect value.
-        raise RuntimeError(
-            f"Bhashini translation returned an unexpected "
-            f"response: {data}"
+        raise TranslationError(
+            "Bhashini translation returned no translated text."
         )
 
     return translated.strip()
@@ -222,10 +237,12 @@ def translate_to_english(
 ) -> str:
     """
     Translate user input into English before it enters
-    classification / routing / retrieval / RAG.
+    classification, routing, retrieval, or RAG.
 
     English input is returned unchanged.
     """
+
+    source_language = _validate_language(source_language)
 
     return _translate(
         text=text,
@@ -267,9 +284,6 @@ def translate_from_english(
 # ------------------------------------------------------------------
 # Citation protection
 # ------------------------------------------------------------------
-
-import re
-
 
 _CITATION_PATTERN = re.compile(
     r"\[[^\[\]]+:[^\[\]]+\]"

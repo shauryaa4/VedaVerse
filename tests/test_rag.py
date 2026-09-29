@@ -215,16 +215,15 @@ def test_answer_query_passes_where_clause_through_for_debugging(monkeypatch):
 
 # --- RAG-06: language handling ---
 
-def test_build_prompt_defaults_to_english():
+def test_build_prompt_is_always_english():
+    """
+    The RAG layer always generates its legal reasoning prompt in English.
+    Bhashini localization belongs exclusively to routes/query.py.
+    """
     prompt = _build_prompt("question", [])
+
     assert "Write your answer in English." in prompt
     assert "Hindi" not in prompt
-
-
-def test_build_prompt_switches_to_hindi():
-    prompt = _build_prompt("question", [], language="hi")
-    assert "Hindi" in prompt
-    assert "do not translate" in prompt.lower() or "citation" in prompt.lower()
 
 
 def test_answer_query_always_generates_in_english_regardless_of_pip_language(monkeypatch):

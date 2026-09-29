@@ -16,7 +16,8 @@ Important behavior:
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from backend.logic.languages import normalize_language_code
 
 from backend.models.pip import (
     CompositionItem,
@@ -50,7 +51,15 @@ class IntakeRequest(BaseModel):
     # ------------------------------------------------------------------
 
     jurisdiction: Optional[Literal["india", "international"]] = None
-    language: Optional[Literal["en", "hi"]] = None
+    language: Optional[str] = None
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return normalize_language_code(value)
+
     protection_target: Optional[ProtectionTarget] = None
     objective: Optional[list[Objective]] = None
 

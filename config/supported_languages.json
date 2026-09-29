@@ -1,0 +1,162 @@
+{
+  "default": "en",
+  "translation_service_id": "bhashini/iiith/nmt-all",
+  "languages": {
+    "en": {
+      "name": "English",
+      "native_name": "English",
+      "translation": {
+        "status": "configured"
+      },
+      "asr": {
+        "status": "browser"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "hi": {
+      "name": "Hindi",
+      "native_name": "हिन्दी",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "ta": {
+      "name": "Tamil",
+      "native_name": "தமிழ்",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "not_configured"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "bn": {
+      "name": "Bengali",
+      "native_name": "বাংলা",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "te": {
+      "name": "Telugu",
+      "native_name": "తెలుగు",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "not_configured"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "mr": {
+      "name": "Marathi",
+      "native_name": "मराठी",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "gu": {
+      "name": "Gujarati",
+      "native_name": "ગુજરાતી",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "kn": {
+      "name": "Kannada",
+      "native_name": "ಕನ್ನಡ",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "not_configured"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "ml": {
+      "name": "Malayalam",
+      "native_name": "മലയാളം",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "not_configured"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "pa": {
+      "name": "Punjabi",
+      "native_name": "ਪੰਜਾਬੀ",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "or": {
+      "name": "Odia",
+      "native_name": "ଓଡ଼ିଆ",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    },
+    "ur": {
+      "name": "Urdu",
+      "native_name": "اردو",
+      "translation": {
+        "status": "configured_unverified"
+      },
+      "asr": {
+        "status": "configured_unverified"
+      },
+      "tts": {
+        "status": "configured_unverified"
+      }
+    }
+  }
+}

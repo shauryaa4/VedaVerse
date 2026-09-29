@@ -334,8 +334,19 @@ def test_query_translates_hindi_question_and_answer(monkeypatch):
 
     captured = {}
 
-    def fake_answer_query(pip, question, collection):
+    def fake_answer_query(
+        pip,
+        question,
+        collection,
+        *,
+        original_text=None,
+        detected_language="en",
+        translation_status="not_required",
+    ):
         captured["question"] = question
+        captured["original_text"] = original_text
+        captured["detected_language"] = detected_language
+        captured["translation_status"] = translation_status
         return rag_response
 
     monkeypatch.setattr(query_route, "answer_query", fake_answer_query)
@@ -360,6 +371,9 @@ def test_query_translates_hindi_question_and_answer(monkeypatch):
 
     assert response.status_code == 200
     assert captured["question"] == "Can traditional knowledge be patented?"
+    assert captured["original_text"] == "क्या पारंपरिक ज्ञान का पेटेंट कराया जा सकता है?"
+    assert captured["detected_language"] == "hi"
+    assert captured["translation_status"] == "translated"
     assert response.json()["answer_text"] == (
         "पारंपरिक ज्ञान को पेटेंट नहीं किया जा सकता [IN-1:3(p)]।"
     )

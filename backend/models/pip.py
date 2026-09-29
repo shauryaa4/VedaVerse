@@ -15,7 +15,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from backend.logic.languages import (
+    DEFAULT_LANGUAGE,
+    normalize_language_code,
+)
+
+from pydantic import BaseModel, Field, field_validator
 
 from backend.logic.classification import Category
 from backend.models.classification_input import ClassificationInput
@@ -75,8 +80,39 @@ class Classification(BaseModel):
 
 class ProductIntelligenceProfile(BaseModel):
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    jurisdiction: Optional[Literal["india", "international"]] = None
-    language: Literal["en", "hi"] = "en"
+
+    jurisdiction: Optional[
+        Literal["india", "international"]
+    ] = None
+
+    language: str = DEFAULT_LANGUAGE
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        return normalize_language_code(value)
+
+    product: Product = Field(default_factory=Product)
+
+    protection_target: Optional[ProtectionTarget] = None
+
+    objective: list[Objective] = Field(
+        default_factory=list
+    )
+
+    classification: Classification = Field(
+        default_factory=Classification
+    )
+
+    abs_facts: Optional[ABSFactProfile] = None
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
     product: Product = Field(default_factory=Product)
     protection_target: Optional[ProtectionTarget] = None
