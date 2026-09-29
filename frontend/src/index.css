@@ -32,6 +32,17 @@
   --shadow-md: 0 4px 16px rgba(27, 26, 23, 0.08);
 }
 
+.app-translation-warning {
+  margin: 10px auto;
+  width: min(calc(100% - 32px), 1180px);
+  padding: 10px 14px;
+  border: 1px solid #e5bd72;
+  border-radius: 8px;
+  color: #61420e;
+  background: #fff8e8;
+  font-size: 13px;
+}
+
 * {
   box-sizing: border-box;
 }

@@ -20,6 +20,11 @@ import sys
 from pathlib import Path
 from collections import Counter
 
+# Windows consoles often use cp1252, which cannot print the warning glyphs
+# below. Keep ingestion usable from both PowerShell and UTF-8 terminals.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 # Allow running as `python scripts/ingest_corpus.py` from repo root.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

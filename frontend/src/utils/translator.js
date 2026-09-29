@@ -226,6 +226,11 @@ export async function translateAsync(text, targetLang) {
       })
       .catch((err) => {
         console.warn('[translateAsync] failed:', err);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('vedaverse:translation-error', {
+            detail: { language: targetLang },
+          }));
+        }
         return text;
       })
       .finally(() => pendingTranslations.delete(cacheKey)));

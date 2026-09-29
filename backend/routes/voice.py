@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 from backend.logic.language import (
     detect_text_language,
-    translate_from_english,
-    translate_to_english,
 )
 from backend.logic.speech import speech_service
 from backend.routes.query import QueryRequest, query_endpoint
@@ -77,8 +75,8 @@ async def transcribe_voice(
         raise
     except Exception as exc:
         raise HTTPException(
-            status_code=500,
-            detail=f"Speech processing failed: {exc}",
+            status_code=502 if "Bhashini" in str(exc) else 500,
+            detail={"code": "BHASHINI_SPEECH_FAILED", "message": str(exc)},
         )
 
 
@@ -99,8 +97,8 @@ def text_to_speech_route(req: TTSRequest):
         }
     except Exception as exc:
         raise HTTPException(
-            status_code=500,
-            detail=f"Text-to-speech generation failed: {exc}",
+            status_code=502 if "Bhashini" in str(exc) else 500,
+            detail={"code": "BHASHINI_TTS_FAILED", "message": str(exc)},
         )
 
 
@@ -143,16 +141,15 @@ async def voice_chat_endpoint(
             language or asr_result.language or detect_text_language(user_transcript)
         )
 
-        # Step 3: NMT to English
-        english_question = translate_to_english(user_transcript, detected_lang)
-
-        # Step 4: Run Main PIP-RAG-Confidence Pipeline via query_endpoint
+        # The query endpoint owns input/output translation. Calling the
+        # translator here as well translated the same transcript twice.
         query_req = QueryRequest(
             session_id=session_id,
             question=user_transcript,
             language=detected_lang,
         )
         rag_res = query_endpoint(query_req, user=user)
+        english_question = rag_res.normalized_text
 
         # Step 5: Bhashini TTS (Voice answer generation)
         audio_b64 = None

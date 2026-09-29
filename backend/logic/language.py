@@ -1,46 +1,24 @@
 from __future__ import annotations
 
-import os
 import re
+from pathlib import Path
 
-import requests
 from dotenv import load_dotenv
+from backend.logic.bhashini_client import BhashiniError, compute as bhashini_compute
 
 from backend.logic.languages import (
-    TRANSLATION_SERVICE_ID,
     UnsupportedLanguageError,
     normalize_language_code,
 )
 
 
-load_dotenv()
-
-
-BHASHINI_URL = (
-    "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
-)
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 class TranslationError(RuntimeError):
     """Raised when Bhashini translation cannot be completed."""
 
     pass
-
-
-def _get_api_key() -> str:
-    """
-    Load the Bhashini inference API key only when a
-    translation request is actually made.
-    """
-
-    api_key = os.getenv("BHASHINI_INFERENCE_KEY")
-
-    if not api_key:
-        raise TranslationError(
-            "BHASHINI_INFERENCE_KEY is not configured."
-        )
-
-    return api_key
 
 
 def _validate_language(language: str) -> str:
@@ -155,8 +133,6 @@ def _translate(
     if source_language == target_language:
         return text
 
-    api_key = _get_api_key()
-
     payload = {
         "pipelineTasks": [
             {
@@ -166,7 +142,6 @@ def _translate(
                         "sourceLanguage": source_language,
                         "targetLanguage": target_language,
                     },
-                    "serviceId": TRANSLATION_SERVICE_ID,
                 },
             }
         ],
@@ -179,33 +154,15 @@ def _translate(
         },
     }
 
-    headers = {
-        "Authorization": api_key,
-        "Content-Type": "application/json",
-        "Accept": "*/*",
-    }
-
     try:
-        response = requests.post(
-            BHASHINI_URL,
-            headers=headers,
-            json=payload,
-            timeout=60,
+        data = bhashini_compute(
+            payload,
+            task_type="translation",
+            source_language=source_language,
+            target_language=target_language,
         )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-    except requests.RequestException as exc:
-        raise TranslationError(
-            f"Bhashini translation request failed: {exc}"
-        ) from exc
-
-    except ValueError as exc:
-        raise TranslationError(
-            "Bhashini returned an invalid JSON response."
-        ) from exc
+    except BhashiniError as exc:
+        raise TranslationError(str(exc)) from exc
 
     pipeline_response = data.get("pipelineResponse", [])
 

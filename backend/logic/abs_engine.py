@@ -170,11 +170,110 @@ def build_fact_profile_from_pip(pip: ProductIntelligenceProfile) -> ABSFactProfi
     return facts
 
 
+def _origin_fact_conflicts(pip: ProductIntelligenceProfile) -> list[str]:
+    """Return explicit conflicts between independently supplied origin fields.
+
+    Do not silently let the questionnaire overwrite the ABS fact profile (or
+    vice versa): origin can change the applicable statutory pathway.
+    """
+    product = pip.product
+    supplied_abs_origin = (
+        pip.abs_facts.resource.origin_status
+        if pip.abs_facts is not None
+        else "unknown"
+    )
+    if product.biological_origin_known != "yes" or supplied_abs_origin == "unknown":
+        return []
+
+    region = product.biological_origin_region or ""
+    if _region_signals_india(region):
+        questionnaire_origin = "india"
+    elif _region_signals_non_india(region):
+        questionnaire_origin = "foreign"
+    else:
+        return []
+
+    if questionnaire_origin == supplied_abs_origin:
+        return []
+
+    return [
+        "Product questionnaire says the biological resource originated "
+        f"in {questionnaire_origin}, while the ABS facts say {supplied_abs_origin}."
+    ]
+
+
+def _input_fact_conflicts(pip: ProductIntelligenceProfile) -> list[str]:
+    """Collect supported conflict flags plus the cross-form origin check."""
+    conflicts = _origin_fact_conflicts(pip)
+    if pip.abs_facts is None:
+        return conflicts
+
+    named_profiles = (
+        ("applicant", pip.abs_facts.applicant),
+        ("biological resource", pip.abs_facts.resource),
+        ("access source", pip.abs_facts.access),
+        ("traditional knowledge", pip.abs_facts.tk),
+        ("activity", pip.abs_facts.activity),
+        ("IPR lifecycle", pip.abs_facts.ipr),
+    )
+    for label, profile in named_profiles:
+        if getattr(profile, "status", None) == "CONFLICTING":
+            conflicts.append(
+                f"The submitted {label} facts are marked CONFLICTING and need confirmation."
+            )
+    return list(dict.fromkeys(conflicts))
+
+
 def assess_abs_fact_driven(pip: ProductIntelligenceProfile) -> ABSAssessment:
     """Fact-driven, 100% deterministic ABS pathway engine."""
     abs_data = _load_nba_abs_data()
     manifest_docs = _load_manifest_docs()
+    conflicts = _input_fact_conflicts(pip)
     facts = build_fact_profile_from_pip(pip)
+
+    if conflicts:
+        reason = " ".join(conflicts)
+        origin_conflict = any("origin" in item.lower() for item in conflicts)
+        return ABSAssessment(
+            status="CONFLICTING",
+            pathway="UNRESOLVED_CONFLICTING_FACTS",
+            relevance="possible",
+            reasoning=[
+                "No ABS pathway was selected because the submitted origin facts conflict.",
+                reason,
+            ],
+            facts_considered={
+                "questionnaire_origin": (
+                    "india" if _region_signals_india(pip.product.biological_origin_region or "") else "foreign"
+                ),
+                "abs_origin": pip.abs_facts.resource.origin_status if pip.abs_facts else "unknown",
+            },
+            missing_information=[
+                ABSMissingInfo(
+                    field_name=("biological_origin_region" if origin_conflict else "conflicting_abs_facts"),
+                    prompt_question=(
+                        "Please confirm whether the biological resource was obtained in India or abroad."
+                        if origin_conflict
+                        else "Please review and confirm the conflicting ABS facts before continuing."
+                    ),
+                    impact_description="Conflicting facts prevent a reliable ABS pathway assessment.",
+                    why_it_matters=reason,
+                )
+            ],
+            human_escalation=ABSHumanEscalation(
+                human_review=True,
+                reason=reason,
+                case_summary="Resolve the conflicting biological-resource origin before relying on an ABS pathway.",
+                facts={
+                    "questionnaire_region": pip.product.biological_origin_region,
+                    "abs_origin_status": pip.abs_facts.resource.origin_status if pip.abs_facts else "unknown",
+                },
+                missing_facts=["biological_origin_region" if origin_conflict else "conflicting_abs_facts"],
+                conflicts=conflicts,
+            ),
+            abstained=True,
+            abstain_reason="Conflicting biological-resource origin facts require clarification.",
+        )
 
     reasoning: list[str] = []
     authority_guidance: list[str] = []
@@ -765,7 +864,7 @@ def assess_abs_fact_driven(pip: ProductIntelligenceProfile) -> ABSAssessment:
     if facts.resource.origin_status == "india":
         relevance = "likely"
         if facts.applicant.entity_category == "unknown":
-            overall_status = "CONDITIONAL"
+            overall_status = "INSUFFICIENT_INFORMATION"
         elif any(f.field_name for f in missing_information if f.field_name in ("entity_category", "biological_origin_region")):
             overall_status = "INSUFFICIENT_INFORMATION"
         else:
@@ -774,7 +873,11 @@ def assess_abs_fact_driven(pip: ProductIntelligenceProfile) -> ABSAssessment:
         overall_status = "STRONG"
         relevance = "unlikely"
     else:
-        overall_status = "CONDITIONAL"
+        overall_status = (
+            "INSUFFICIENT_INFORMATION"
+            if facts.resource.biological_resource_involved
+            else "CONDITIONAL"
+        )
         relevance = "possible"
 
     # STEP 9: Human Escalation & Abstention Analysis (Area 12, 13)

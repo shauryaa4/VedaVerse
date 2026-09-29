@@ -94,6 +94,11 @@ def test_cache_citations_stores_real_verified_citation(monkeypatch):
 
     _cache_citations("session-real", rag_response)
 
+    assert len(rag_response.evidence_records) == 1
+    assert rag_response.evidence_records[0].module == "legal_rag"
+    assert rag_response.evidence_records[0].status == "SUPPORTED"
+    assert rag_response.evidence_records[0].source_id == "IN-1"
+
     response = client.get(
         "/citation/IN-1/3(p)",
         params={"session_id": "session-real"},

@@ -2,29 +2,17 @@ from __future__ import annotations
 
 import base64
 import os
+import shutil
+import wave
 from dataclasses import dataclass
+from pathlib import Path
 
-import requests
 from dotenv import load_dotenv
+from backend.logic.languages import normalize_language_code
+from backend.logic.bhashini_client import BhashiniError, compute as bhashini_compute
 
 
-load_dotenv()
-
-
-BHASHINI_URL = (
-    "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
-)
-
-ASR_SERVICE_ID = (
-    "ai4bharat/conformer-multilingual-indo_aryan-gpu--t4"
-)
-
-# This is the TTS service that was used successfully
-# in our Bhashini TTS test.
-TTS_SERVICE_ID = (
-    "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4"
-)
-MULTILINGUAL_TTS_SERVICE_ID = "Bhashini/IITM/TTS"
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 @dataclass
@@ -46,8 +34,15 @@ def convert_to_wav(input_path: str) -> str:
     """
     output_path = input_path + "_converted.wav"
     try:
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            try:
+                import imageio_ffmpeg
+                ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+            except ImportError:
+                ffmpeg = "ffmpeg"
         subprocess.run(
-            ["ffmpeg", "-y", "-i", input_path, "-ar", "16000", "-ac", "1", output_path],
+            [ffmpeg, "-y", "-i", input_path, "-ar", "16000", "-ac", "1", output_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
@@ -55,8 +50,23 @@ def convert_to_wav(input_path: str) -> str:
         if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
             return output_path
     except Exception as exc:
-        print(f"[convert_to_wav] ffmpeg conversion warning: {exc}")
-    return input_path
+        try:
+            with wave.open(input_path, "rb") as wav_file:
+                compatible = (
+                    wav_file.getnchannels() == 1
+                    and wav_file.getsampwidth() == 2
+                    and wav_file.getframerate() == 16000
+                )
+        except (wave.Error, OSError):
+            compatible = False
+        if compatible:
+            return input_path
+        raise RuntimeError(
+            "Audio conversion failed. Install the backend requirements (including "
+            "imageio-ffmpeg), install ffmpeg on the backend host, "
+            "or upload 16 kHz mono PCM WAV audio."
+        ) from exc
+    raise RuntimeError("Audio conversion produced no usable WAV file.")
 
 
 class BhashiniSpeechService:
@@ -74,28 +84,44 @@ class BhashiniSpeechService:
     """
 
     def __init__(self) -> None:
-        self.api_key = None
-        self.user_id = os.getenv("BHASHINI_UDYAT_KEY")
+        """Credentials are read lazily so importing the service is safe."""
 
-    def _get_api_key(self) -> str:
-        """
-        Get the Bhashini inference API key when an actual
-        Bhashini request is made.
-        """
-
-        api_key = os.getenv("BHASHINI_INFERENCE_KEY")
-
-        if not api_key:
-            raise RuntimeError(
-                "BHASHINI_INFERENCE_KEY is not configured."
+    def _compute(
+        self,
+        payload: dict,
+        task_type: str,
+        source_language: str = "",
+        target_language: str = "",
+    ) -> dict:
+        try:
+            return bhashini_compute(
+                payload,
+                task_type=task_type,
+                source_language=source_language,
+                target_language=target_language,
             )
+        except BhashiniError as exc:
+            raise RuntimeError(str(exc)) from exc
 
-        return api_key
+    def _detect_language_from_wav(self, wav_path: str) -> str:
+        with open(wav_path, "rb") as audio_file:
+            audio_content = base64.b64encode(audio_file.read()).decode("utf-8")
+        data = self._compute({
+            "pipelineTasks": [{
+                "taskType": "audio-lang-detection",
+                "config": {},
+            }],
+            "inputData": {"audio": [{"audioContent": audio_content}]},
+        }, task_type="audio-lang-detection")
+        try:
+            detected = data["pipelineResponse"][0]["output"][0]["langPrediction"][0]["langCode"]
+            return normalize_language_code(detected)
+        except (KeyError, IndexError, TypeError) as exc:
+            raise RuntimeError("Bhashini audio language detection returned no language.") from exc
 
     def detect_language(self, audio_path: str) -> str:
         """
-        Detect the language spoken in an audio file (ALD).
-        Falls back to 'hi' (Hindi) if auto-detection is unspecified.
+        Detect the language spoken in an audio file with Bhashini ALD.
         """
 
         if not os.path.exists(audio_path):
@@ -103,7 +129,12 @@ class BhashiniSpeechService:
                 f"Audio file not found: {audio_path}"
             )
 
-        return "hi"
+        wav_path = convert_to_wav(audio_path)
+        try:
+            return self._detect_language_from_wav(wav_path)
+        finally:
+            if wav_path != audio_path and os.path.exists(wav_path):
+                os.remove(wav_path)
 
     def speech_to_text(
         self,
@@ -126,14 +157,11 @@ class BhashiniSpeechService:
                 f"Audio file not found: {audio_path}"
             )
 
-        if not language:
-            language = self.detect_language(audio_path)
-
         wav_path = convert_to_wav(audio_path)
-
         try:
-            api_key = self._get_api_key()
-
+            if not language:
+                language = self._detect_language_from_wav(wav_path)
+            language = normalize_language_code(language)
             with open(wav_path, "rb") as audio_file:
                 audio_content = base64.b64encode(
                     audio_file.read()
@@ -154,7 +182,6 @@ class BhashiniSpeechService:
                         "language": {
                             "sourceLanguage": language
                         },
-                        "serviceId": ASR_SERVICE_ID,
                         "audioFormat": "wav",
                         "samplingRate": 16000,
                     },
@@ -169,21 +196,7 @@ class BhashiniSpeechService:
             },
         }
 
-        headers = {
-            "Authorization": api_key,
-            "Content-Type": "application/json",
-        }
-
-        response = requests.post(
-            BHASHINI_URL,
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
+        data = self._compute(payload, task_type="asr", source_language=language)
 
         pipeline_response = data.get("pipelineResponse", [])
 
@@ -233,8 +246,6 @@ class BhashiniSpeechService:
         if not language.strip():
             raise ValueError("Language cannot be empty.")
 
-        api_key = self._get_api_key()
-
         payload = {
             "pipelineTasks": [
                 {
@@ -243,10 +254,6 @@ class BhashiniSpeechService:
                         "language": {
                             "sourceLanguage": language
                         },
-                        "serviceId": (
-                            TTS_SERVICE_ID if language == "hi"
-                            else MULTILINGUAL_TTS_SERVICE_ID
-                        ),
                         "gender": "female",
                     },
                 }
@@ -260,21 +267,8 @@ class BhashiniSpeechService:
             },
         }
 
-        headers = {
-            "Authorization": api_key,
-            "Content-Type": "application/json",
-        }
-
-        response = requests.post(
-            BHASHINI_URL,
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
+        language = normalize_language_code(language)
+        data = self._compute(payload, task_type="tts", source_language=language)
 
         pipeline_response = data.get("pipelineResponse", [])
 

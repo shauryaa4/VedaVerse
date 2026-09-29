@@ -22,9 +22,11 @@ Language handling:
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
+from pathlib import Path
 
 from backend.logic.languages import normalize_language_code
 from backend.models.pip import ProductIntelligenceProfile
+from backend.models.evidence import EvidenceRecord
 from backend.rag.generation import RagResponse, answer_query
 
 from backend.logic.citation_verification import (
@@ -60,7 +62,7 @@ from backend.routes.auth import (
 router = APIRouter()
 
 
-_PERSIST_DIR = "./chroma_data"
+_PERSIST_DIR = str(Path(__file__).resolve().parents[2] / "chroma_data")
 _collection = None
 
 
@@ -96,10 +98,19 @@ def _cache_citations(
     pairs = extract_claim_citation_pairs(rag_response.answer_text)
 
     classifications = []
+    evidence_records = []
 
     for sentence, citation_id in pairs:
         if citation_id is None:
             classifications.append("UNCITED")
+            evidence_records.append(
+                EvidenceRecord(
+                    module="legal_rag",
+                    evidence_type="claim",
+                    claim_or_finding=sentence,
+                    status="UNCITED",
+                )
+            )
             continue
 
         chunk_text = get_chunk_text(
@@ -131,7 +142,34 @@ def _cache_citations(
         )
 
         if matching_chunk is None:
+            evidence_records.append(
+                EvidenceRecord(
+                    module="legal_rag",
+                    evidence_type="claim",
+                    claim_or_finding=sentence,
+                    status="UNSUPPORTED",
+                    source_id=citation_id,
+                )
+            )
             continue
+
+        evidence_records.append(
+            EvidenceRecord(
+                module="legal_rag",
+                evidence_type="claim",
+                claim_or_finding=sentence,
+                status=classification,
+                source_id=matching_chunk.doc_id or citation_id,
+                source_title=matching_chunk.document_name,
+                document_type=matching_chunk.document_type,
+                provision=matching_chunk.section_or_article,
+                date_enacted=matching_chunk.date_enacted,
+                last_verified_date=matching_chunk.last_verified_date,
+                source_url=matching_chunk.source_url,
+                excerpt=matching_chunk.text,
+                overlap_score=score,
+            )
+        )
 
         store_citation(
             session_id=session_id,
@@ -147,6 +185,7 @@ def _cache_citations(
             overlap_score=score,
         )
 
+    rag_response.evidence_records = evidence_records
     return classifications
 
 

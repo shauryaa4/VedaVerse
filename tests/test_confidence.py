@@ -4,7 +4,7 @@ from backend.rag.confidence import (
     compute_confidence_decision,
     evaluate_confidence,
 )
-from backend.rag.generation import RagResponse
+from backend.rag.generation import RagResponse, RetrievedChunkRef
 
 
 def _make_response(answer_text="Some answer [IN-1:3(p)].", status_notes=None):
@@ -254,7 +254,18 @@ def test_classification_changes_system_score_for_same_other_inputs():
 
 
 def test_abstention_is_not_overridden_by_high_numeric_score():
-    result = evaluate_confidence("high", 1.0, True, _make_response())
+    response = _make_response()
+    response.used_chunks = [
+        RetrievedChunkRef(
+            chunk_id=f"IN-{index}:section-{index}",
+            text="Authoritative legal evidence.",
+            source_url=None,
+            doc_id=f"IN-{index}",
+            section_or_article=f"section-{index}",
+        )
+        for index in (1, 2)
+    ]
+    result = evaluate_confidence("high", 1.0, True, response)
     assert result.confidence == "abstain"
     assert result.abstained is True
     assert result.answer_text == ""

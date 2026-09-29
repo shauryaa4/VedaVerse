@@ -18,7 +18,12 @@ import './CitationDetailModal.css';
 export default function CitationDetailModal({ label, loading, error, detail, onClose, onRestart, currentLang = 'en' }) {
   const uiText = useTranslatedTexts([
     'Citation', 'Loading source text…', 'Verified ✓', 'Not fully supported', 'Close',
+    'Unofficial machine translation', 'Original source text',
   ], currentLang);
+  const translatedExcerpt = useTranslatedTexts(
+    detail?.excerpt_text ? [detail.excerpt_text] : [],
+    currentLang,
+  );
   return (
     <div className="citation-modal__overlay" onClick={onClose}>
       <div
@@ -55,6 +60,11 @@ export default function CitationDetailModal({ label, loading, error, detail, onC
             >
               {detail.verified ? uiText('Verified ✓') : uiText('Not fully supported')}
             </span>
+            {currentLang !== 'en' && <>
+              <p className="citation-modal__doc">{uiText('Unofficial machine translation')}</p>
+              <blockquote className="citation-modal__excerpt">{translatedExcerpt(detail.excerpt_text)}</blockquote>
+              <p className="citation-modal__doc">{uiText('Original source text')}</p>
+            </>}
             <blockquote className="citation-modal__excerpt">{detail.excerpt_text}</blockquote>
           </>
         )}

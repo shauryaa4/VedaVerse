@@ -22,13 +22,14 @@ import os
 from pathlib import Path
 from typing import Literal, Optional
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from google import genai
 from pydantic import BaseModel, Field
 
 from backend.logic.classification import apply_classification_to_pip
 from backend.logic.languages import normalize_language_code
 from backend.logic.routing import route_pip
+from backend.models.evidence import EvidenceRecord
 from backend.services.vector_store import build_where_clause
 from backend.services.vector_store import query as vector_query
 
@@ -37,8 +38,11 @@ from backend.services.vector_store import query as vector_query
 # Environment / Gemini configuration
 # ----------------------------------------------------------------------
 
-# Load .env from repo root regardless of where this module is imported from.
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
+# Resolve the local .env from the repository root regardless of the process
+# working directory. Keep this path so a key added after the backend starts is
+# also picked up on the next Gemini client initialization.
+_REPO_ENV_PATH = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(_REPO_ENV_PATH)
 
 _GEMINI_MODEL = "gemini-3.6-flash"
 
@@ -56,12 +60,18 @@ def _get_client() -> "genai.Client":
     global _client
 
     if _client is None:
-        api_key = os.environ.get("GEMINI_API_KEY")
+        # Prefer the hosting environment, but fall back to the repo .env file.
+        # The file is read here as well as at import time because developers
+        # often add the key while the API server is already running.
+        api_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
+        if not api_key:
+            api_key = (dotenv_values(_REPO_ENV_PATH).get("GEMINI_API_KEY") or "").strip()
 
         if not api_key:
             raise RuntimeError(
-                "GEMINI_API_KEY is not set. Copy .env.example to .env and add "
-                "your real key (see scripts/test_llm_connection.py to verify)."
+                "Gemini answer generation is not configured. Set GEMINI_API_KEY "
+                "in the repository-root .env for local use, or in the backend's "
+                "environment/secrets for deployment. Then restart the backend."
             )
 
         _client = genai.Client(api_key=api_key)
@@ -84,7 +94,10 @@ class RetrievedChunkRef(BaseModel):
     source_url: str | None
     doc_id: str | None
     document_name: str | None = None
+    document_type: str | None = None
     section_or_article: str | None
+    date_enacted: str | None = None
+    last_verified_date: str | None = None
     legal_regime: str | None = None
 
 
@@ -191,6 +204,8 @@ class RagResponse(BaseModel):
     status_notes: list[str] = Field(
         default_factory=list
     )
+
+    evidence_records: list[EvidenceRecord] = Field(default_factory=list)
 
     # ------------------------------------------------------------------
     # Confidence contract
@@ -370,9 +385,12 @@ def _results_to_chunk_refs(
                 source_url=meta.get("source_url") or None,
                 doc_id=meta.get("doc_id") or None,
                 document_name=meta.get("document_name") or None,
+                document_type=meta.get("document_type") or None,
                 section_or_article=(
                     meta.get("section_or_article") or None
                 ),
+                date_enacted=meta.get("date_enacted") or None,
+                last_verified_date=meta.get("last_verified_date") or None,
                 legal_regime=(
                     meta.get("legal_regime") or None
                 ),

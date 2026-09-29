@@ -7,6 +7,7 @@ logic lives in backend/logic, backend/rag, and backend/services.
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import os
 
 from backend.routes.query import router as query_router
 from backend.routes.citation import router as citation_router
@@ -19,13 +20,25 @@ from backend.routes.voice import router as voice_router
 from backend.routes.bhashini_routes import router as bhashini_router
 from backend.routes.auth import router as auth_router
 from backend.routes.datasets import router as datasets_router
+from backend.routes.assessment import router as assessment_router
 
 app = FastAPI(title="IP-SAKTI Sahayak API", version="0.1.0")
 
-# Wide-open CORS for local dev only. Tighten before any real deployment (API-05).
+_cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOW_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
+    # Vite may move to 5174/5175 when the default port is occupied. Permit
+    # loopback development origins on any port without opening CORS to the
+    # public internet; deployed origins still need to be listed above.
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -41,6 +54,7 @@ app.include_router(voice_router)
 app.include_router(bhashini_router)
 app.include_router(auth_router)
 app.include_router(datasets_router)
+app.include_router(assessment_router)
 
 
 

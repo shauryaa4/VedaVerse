@@ -4,11 +4,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.logic.language import (
+    TranslationError,
     _translate,
     detect_text_language,
     translate_from_english,
     translate_to_english,
 )
+from backend.logic.languages import UnsupportedLanguageError
 
 router = APIRouter(prefix="/bhashini", tags=["Bhashini Translation"])
 
@@ -30,6 +32,17 @@ class TranslationResult(BaseModel):
     translated_text: str
     source_lang: str
     target_lang: str
+
+
+def _raise_translation_error(exc: Exception) -> None:
+    if isinstance(exc, UnsupportedLanguageError):
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if isinstance(exc, TranslationError):
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "BHASHINI_TRANSLATION_FAILED", "message": str(exc)},
+        ) from exc
+    raise exc
 
 
 @router.post("/translate", response_model=TranslationResult)
@@ -58,14 +71,8 @@ def bhashini_translate(req: TranslateRequest):
             source_lang=source_lang,
             target_lang=req.lang,
         )
-    except Exception as exc:
-        # Fallback to original text if Bhashini call fails
-        return TranslationResult(
-            original_text=req.text,
-            translated_text=req.text,
-            source_lang=req.source_lang or "en",
-            target_lang=req.lang,
-        )
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)
 
 
 @router.post("/translate_batch")
@@ -88,8 +95,8 @@ def bhashini_translate_batch(req: BatchTranslateRequest):
                 target_language=req.target_lang,
             )
             results.append(trans)
-        except Exception:
-            results.append(text)
+        except (TranslationError, UnsupportedLanguageError) as exc:
+            _raise_translation_error(exc)
 
     return {"translations": results}
 
@@ -107,13 +114,8 @@ def bhashini_translate_in(req: TranslateRequest):
             source_lang=req.lang,
             target_lang="en",
         )
-    except Exception:
-        return TranslationResult(
-            original_text=req.text,
-            translated_text=req.text,
-            source_lang=req.lang,
-            target_lang="en",
-        )
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)
 
 
 @router.post("/out", response_model=TranslationResult)
@@ -129,10 +131,5 @@ def bhashini_translate_out(req: TranslateRequest):
             source_lang="en",
             target_lang=req.lang,
         )
-    except Exception:
-        return TranslationResult(
-            original_text=req.text,
-            translated_text=req.text,
-            source_lang="en",
-            target_lang=req.lang,
-        )
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)

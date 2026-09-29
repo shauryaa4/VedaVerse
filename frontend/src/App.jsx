@@ -45,6 +45,7 @@ export default function App() {
     try { return localStorage.getItem('ip-sakti-ui-language') || 'en'; }
     catch (_) { return 'en'; }
   });
+  const [translationWarning, setTranslationWarning] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState('query');
   const [accountDialog, setAccountDialog] = useState('');
   const [accountError, setAccountError] = useState(null);
@@ -70,6 +71,15 @@ export default function App() {
 
   useEffect(() => {
     try { localStorage.setItem('ip-sakti-ui-language', selectedLanguage); } catch (_) { /* language still works for this session */ }
+    setTranslationWarning(false);
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    const onTranslationError = (event) => {
+      if (event.detail?.language === selectedLanguage) setTranslationWarning(true);
+    };
+    window.addEventListener('vedaverse:translation-error', onTranslationError);
+    return () => window.removeEventListener('vedaverse:translation-error', onTranslationError);
   }, [selectedLanguage]);
 
   const refreshSavedCases = async () => {
@@ -365,6 +375,12 @@ export default function App() {
         onLanguageChange={setSelectedLanguage}
       />
 
+      {translationWarning && (
+        <div className="app-translation-warning" role="status">
+          Some text could not be translated and may still appear in English. Check the Bhashini credentials and try again.
+        </div>
+      )}
+
       <main className={`app-shell__main${['workspace', 'dashboard', 'library'].includes(step) ? ' app-shell__main--workspace' : ''}`}>
         {step === 'landing' && (
           <Landing
@@ -410,7 +426,7 @@ export default function App() {
         {step === 'workspace' && (
           <>
             <WorkspaceSidebar active={workspaceTab} signedIn={!!accountUser} user={accountUser} onDashboard={() => { if (accountUser) { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onHistory={() => { if (accountUser) { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={setSelectedLanguage} />
-            {workspaceTab.startsWith('dataset-') ? <DatasetExplorer key={workspaceTab} dataset={workspaceTab.slice('dataset-'.length)} onChangeDataset={(dataset) => setWorkspaceTab(`dataset-${dataset}`)} /> : <Workspace
+            {workspaceTab.startsWith('dataset-') ? <DatasetExplorer key={workspaceTab} dataset={workspaceTab.slice('dataset-'.length)} currentLang={selectedLanguage} onChangeDataset={(dataset) => setWorkspaceTab(`dataset-${dataset}`)} /> : <Workspace
               pip={pip}
               classification={classification}
               queryHistory={queryHistory}

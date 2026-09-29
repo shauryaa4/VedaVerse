@@ -25,7 +25,10 @@ from backend.rag.chunking import Chunk
 DEFAULT_COLLECTION_NAME = "legal_corpus"
 
 
-def get_client(persist_directory: str = "./chroma_data") -> chromadb.ClientAPI:
+_DEFAULT_PERSIST_DIR = str(Path(__file__).resolve().parents[2] / "chroma_data")
+
+
+def get_client(persist_directory: str = _DEFAULT_PERSIST_DIR) -> chromadb.ClientAPI:
     """Local persistent client — data survives between runs, no server to manage."""
     return chromadb.PersistentClient(path=persist_directory)
 
@@ -123,7 +126,7 @@ _default_client: Optional[chromadb.ClientAPI] = None
 _default_collection: Optional[Collection] = None
 
 
-def get_default_collection(persist_directory: str = "./chroma_data") -> Collection:
+def get_default_collection(persist_directory: str = _DEFAULT_PERSIST_DIR) -> Collection:
     """
     ABS-03: shared lazy singleton for callers that need a collection but
     aren't the main /query route (which already keeps its own private
@@ -140,7 +143,7 @@ def get_default_collection(persist_directory: str = "./chroma_data") -> Collecti
     return _default_collection
 
 
-def ingest_directory(corpus_root: Path, persist_directory: str = "./chroma_data",
+def ingest_directory(corpus_root: Path, persist_directory: str = _DEFAULT_PERSIST_DIR,
                       collection_name: str = DEFAULT_COLLECTION_NAME) -> int:
     """Convenience wrapper: chunk a directory tree and load it straight into Chroma.
     Returns the number of chunks actually inserted."""
