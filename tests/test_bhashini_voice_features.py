@@ -20,15 +20,20 @@ def test_bhashini_translate_endpoint(monkeypatch):
 
 def test_bhashini_translate_batch_endpoint(monkeypatch):
     from backend.routes import bhashini_routes
-    monkeypatch.setattr(bhashini_routes, "_translate", lambda text, source_language, target_language: f"{target_language}:{text}")
+    monkeypatch.setattr(
+        bhashini_routes,
+        "translate_many_from_english",
+        lambda texts, target_language, source_language: [
+            f"{target_language}:{text}" for text in texts
+        ],
+    )
     res = client.post(
         "/bhashini/translate_batch",
         json={"texts": ["Hello", "Welcome"], "target_lang": "hi", "source_lang": "en"},
     )
     assert res.status_code == 200
     data = res.json()
-    assert "translations" in data
-    assert len(data["translations"]) == 2
+    assert data["translations"] == ["hi:Hello", "hi:Welcome"]
 
 
 def test_bhashini_in_out_endpoints(monkeypatch):
