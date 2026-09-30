@@ -21,8 +21,10 @@ Language handling:
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+import httpx
 from pydantic import BaseModel, field_validator
 from pathlib import Path
+from google.genai.errors import APIError as GeminiAPIError
 
 from backend.logic.languages import normalize_language_code
 from backend.models.pip import ProductIntelligenceProfile
@@ -276,18 +278,48 @@ def query_endpoint(
         # English normalized question.
         # --------------------------------------------------------------
 
-        result = answer_query(
-            pip,
-            english_question,
-            _get_collection(),
-            original_text=request.question,
-            detected_language=request.language,
-            translation_status=(
-                "not_required"
-                if request.language == "en"
-                else "translated"
-            ),
-        )
+        try:
+            result = answer_query(
+                pip,
+                english_question,
+                _get_collection(),
+                original_text=request.question,
+                detected_language=request.language,
+                translation_status=(
+                    "not_required"
+                    if request.language == "en"
+                    else "translated"
+                ),
+            )
+        except GeminiAPIError as exc:
+            provider_status = getattr(exc, "code", None)
+            print(
+                "[query] Gemini provider request failed "
+                f"(status={provider_status or 'unknown'})"
+            )
+            if provider_status == 429:
+                detail = (
+                    "The legal-answer service has reached its Gemini API quota. "
+                    "Check the backend project's quota or billing, then try again."
+                )
+            else:
+                detail = (
+                    "The legal-answer service is temporarily unavailable. "
+                    "Check the backend logs and Gemini service configuration, then try again."
+                )
+            raise HTTPException(status_code=503, detail=detail) from exc
+        except httpx.HTTPError as exc:
+            print(
+                "[query] Could not connect to Gemini "
+                f"({type(exc).__name__})"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "The backend could not connect to the legal-answer service. "
+                    "Check backend network access and try again."
+                ),
+            ) from exc
 
         classifications = []
 
