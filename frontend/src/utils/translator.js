@@ -1,4 +1,4 @@
-import { translateText } from '../api/client.js';
+import { translateBatch, transliterateBatch } from '../api/client.js';
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -181,6 +181,131 @@ const UI_DICTIONARY = {
 
 const translationCache = new Map();
 const pendingTranslations = new Map();
+const translationQueue = [];
+let batchTimer = null;
+let batchInFlight = false;
+let activeTranslationLanguage = 'en';
+let batchController = null;
+const MAX_BATCH_ITEMS = 10;
+const MAX_BATCH_CHARS = 1800;
+const TRANSLITERATION_TERMS = new Set([
+  'patent', 'patentability', 'patentable', 'trademark', 'copyright', 'ipr', 'ip',
+  'ayush', 'bhashini', 'tkdl', 'abs', 'pct', 'fssai', 'api', 'ai', 'rag',
+  'chroma', 'chromadb', 'jurisdiction', 'formulation', 'classification',
+  'regulatory', 'phytopharmaceutical', 'nutraceutical', 'transliteration',
+  'confidence score', 'access and benefit sharing', 'benefit-sharing',
+  'geographical indication', 'prior art', 'intellectual property',
+  'patent claim', 'patent claims', 'patent application', 'trademark registration',
+  'trade mark', 'trade secret', 'industrial design', 'plant variety',
+  'intellectual property rights', 'regulatory pathway', 'traditional knowledge',
+  'biological diversity', 'biodiversity', 'invention', 'claims', 'claim',
+]);
+
+function reportTranslationFailure(language) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('vedaverse:translation-error', { detail: { language } }));
+  }
+}
+
+function normalizedTerm(text) {
+  return text.trim().toLocaleLowerCase().replace(/[.,:;!?()[\]{}"']/g, '');
+}
+
+function scheduleBatch() {
+  if (batchTimer || batchInFlight || !translationQueue.length) return;
+  batchTimer = setTimeout(() => {
+    batchTimer = null;
+    flushTranslationBatch();
+  }, 25);
+}
+
+export function activateTranslationLanguage(language) {
+  if (activeTranslationLanguage === language) return;
+  activeTranslationLanguage = language;
+  if (batchTimer) {
+    clearTimeout(batchTimer);
+    batchTimer = null;
+  }
+  batchController?.abort();
+  const keep = [];
+  for (const job of translationQueue) {
+    if (job.language === language) keep.push(job);
+    else {
+      job.resolve(job.text);
+      pendingTranslations.delete(job.key);
+    }
+  }
+  translationQueue.splice(0, translationQueue.length, ...keep);
+  scheduleBatch();
+}
+
+async function flushTranslationBatch() {
+  if (batchInFlight || !translationQueue.length) return;
+  batchInFlight = true;
+  const language = translationQueue[0].language;
+  const batch = [];
+  let chars = 0;
+  while (translationQueue.length && batch.length < MAX_BATCH_ITEMS) {
+    const next = translationQueue[0];
+    if (next.language !== language) break;
+    if (batch.length && chars + next.text.length > MAX_BATCH_CHARS) break;
+    batch.push(translationQueue.shift());
+    chars += next.text.length;
+  }
+
+  let results = batch.map(({ text }) => text);
+  const controller = new AbortController();
+  batchController = controller;
+  try {
+    const response = await translateBatch(batch.map(({ text }) => text), language, 'en', controller.signal);
+    if (!Array.isArray(response.translations) || response.translations.length !== batch.length) {
+      throw new Error('Bhashini returned an incomplete batch.');
+    }
+    results = response.translations.map((value, index) =>
+      typeof value === 'string' && value.trim() ? value : batch[index].text
+    );
+  } catch {
+    // Keep the interface responsive during provider errors; transliteration
+    // below still offers a script fallback for technical terms.
+  }
+
+  const transliterationIndexes = [];
+  results.forEach((value, index) => {
+    const text = batch[index].text;
+    const normalized = normalizedTerm(text);
+    if (value === text && (TRANSLITERATION_TERMS.has(normalized) || /^[A-Z]{2,8}$/.test(text.trim()))) {
+      transliterationIndexes.push(index);
+    }
+  });
+  if (transliterationIndexes.length && !controller.signal.aborted) {
+    try {
+      const response = await transliterateBatch(
+        transliterationIndexes.map((index) => batch[index].text), language, 'en', controller.signal
+      );
+      if (Array.isArray(response.translations) && response.translations.length === transliterationIndexes.length) {
+        transliterationIndexes.forEach((index, resultIndex) => {
+          if (response.translations[resultIndex]?.trim()) results[index] = response.translations[resultIndex];
+        });
+      }
+    } catch {
+      // Preserve the original technical term if no transliteration model exists.
+    }
+  }
+
+  batch.forEach(({ key, text, resolve }, index) => {
+    const result = results[index] || text;
+    if (result !== text) translationCache.set(key, result);
+    else {
+      translationCache.delete(key);
+      reportTranslationFailure(language);
+    }
+    resolve(result);
+    pendingTranslations.delete(key);
+  });
+  if (batchController === controller) batchController = null;
+  batchInFlight = false;
+  scheduleBatch();
+}
 
 /**
  * Translate a single UI string synchronously if in dictionary or cache.
@@ -218,22 +343,11 @@ export async function translateAsync(text, targetLang) {
   }
 
   if (!pendingTranslations.has(cacheKey)) {
-    pendingTranslations.set(cacheKey, translateText(text, targetLang, 'en')
-      .then((res) => {
-        const translated = res.translated_text || text;
-        if (translated !== text) translationCache.set(cacheKey, translated);
-        return translated;
-      })
-      .catch((err) => {
-        console.warn('[translateAsync] failed:', err);
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('vedaverse:translation-error', {
-            detail: { language: targetLang },
-          }));
-        }
-        return text;
-      })
-      .finally(() => pendingTranslations.delete(cacheKey)));
+    const promise = new Promise((resolve) => {
+      translationQueue.push({ key: cacheKey, text, language: targetLang, resolve });
+      scheduleBatch();
+    });
+    pendingTranslations.set(cacheKey, promise);
   }
   return pendingTranslations.get(cacheKey);
 }

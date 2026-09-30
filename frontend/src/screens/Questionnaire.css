@@ -84,7 +84,8 @@
   align-items: center;
 }
 
-.composition-row input[type='text'] {
+.composition-row input[type='text'],
+.composition-row select {
   font-family: var(--font-sans);
   font-size: 13.5px;
   padding: 9px 10px;
@@ -93,6 +94,7 @@
   background: var(--surface);
   color: var(--ink);
   width: 100%;
+  min-width: 0;
 }
 
 .composition-row__active {

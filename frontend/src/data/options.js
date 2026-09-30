@@ -72,6 +72,31 @@ export const COMMON_INGREDIENTS = [
   'Vidanga', 'Pippali', 'Haritaki', 'Bibhitaki', 'Manjistha',
 ];
 
+export const QUANTITY_UNIT_OPTIONS = [
+  { value: 'mg', label: 'mg (milligram)' },
+  { value: 'g', label: 'g (gram)' },
+  { value: 'kg', label: 'kg (kilogram)' },
+  { value: 'mcg', label: 'mcg (microgram)' },
+  { value: 'µg', label: 'µg (microgram)' },
+  { value: 'ml', label: 'mL (millilitre)' },
+  { value: 'l', label: 'L (litre)' },
+  { value: '%', label: '%' },
+  { value: 'ppm', label: 'ppm' },
+  { value: 'IU', label: 'IU' },
+  { value: 'drop', label: 'drop(s)' },
+  { value: 'tsp', label: 'tsp (teaspoon)' },
+  { value: 'tbsp', label: 'tbsp (tablespoon)' },
+  { value: 'piece', label: 'piece(s)' },
+  { value: 'tablet', label: 'tablet(s)' },
+  { value: 'capsule', label: 'capsule(s)' },
+  { value: 'unit', label: 'unit(s)' },
+  { value: 'mg/mL', label: 'mg/mL' },
+  { value: 'g/100g', label: 'g/100g' },
+  { value: 'mL/100mL', label: 'mL/100mL' },
+  { value: 'w/w', label: 'w/w' },
+  { value: 'v/v', label: 'v/v' },
+];
+
 export const CATEGORY_LABELS = {
   classical_generic: 'Classical / Generic',
   proprietary: 'Proprietary',

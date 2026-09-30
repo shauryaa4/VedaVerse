@@ -82,6 +82,10 @@ button {
   flex: 1;
 }
 
+.app-shell--landing { height: 100dvh; min-height: 0; overflow: hidden; }
+.app-shell--landing .app-header { position: relative; }
+.app-shell--landing .app-shell__main { min-height: 0; overflow: hidden; }
+
 .app-shell__main--workspace { display: flex; min-width: 0; background: #f7faf8; }
 .app-shell__main--workspace > .workspace-shell { flex: 1; min-width: 0; }
 .app-shell--dashboard { height: 100dvh; min-height: 600px; overflow: hidden; }
@@ -110,6 +114,10 @@ button {
 .account-dialog .landing__cta { width: 100%; margin-top: 6px; }
 
 @media (max-width: 760px) { .app-shell__main--workspace { flex-direction: column; } }
+@media (max-width: 700px) {
+  .app-shell--landing { height: auto; min-height: 100dvh; overflow: visible; }
+  .app-shell--landing .app-shell__main { overflow: visible; }
+}
 @media (max-width: 760px) {
   .app-shell--dashboard .app-shell__main--workspace { flex-direction: column; }
   .app-shell--dashboard .workspace-sidebar { width: auto; flex: 0 0 auto; height: auto; }

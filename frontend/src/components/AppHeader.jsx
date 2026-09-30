@@ -26,34 +26,42 @@ export default function AppHeader({
   onStepSelect,
   onLanguageChange,
 }) {
+  const isLanding = step === 'landing';
   const activeIndex = STEPS.findIndex((s) => s.key === step);
   const profileNameKey = user?.name?.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
   const localizedProfileName = profileNameKey === 'khushi verma' ? (KHUSHI_VERMA[language] || user.name) : user?.name;
   const uiText = useTranslatedTexts([
     'IP-SAKTI Sahayak', 'AYUSH IP & regulatory guidance', 'India', 'International',
-    'Dashboard',
+    'Dashboard', 'Language',
     'Log in', 'Sign up', ...STEPS.map((item) => item.label),
   ], language);
 
   return (
-    <header className="app-header">
+    <header className={`app-header${isLanding ? ' app-header--landing' : ''}`}>
       <div className="app-header__top">
-        <button className="app-header__brand" onClick={onRestart} type="button">
+        {!isLanding && <button className="app-header__brand" onClick={onRestart} type="button">
           <span className="app-header__brand-mark">IP</span>
           <span className="app-header__brand-text">
             <span className="app-header__brand-title">{uiText('IP-SAKTI Sahayak')}</span>
             <span className="app-header__brand-subtitle">{uiText('AYUSH IP & regulatory guidance')}</span>
           </span>
-        </button>
+        </button>}
+
+        {isLanding && <label className="app-header__landing-language">
+          <span>{uiText('Language')}</span>
+          <select value={language} onChange={(event) => onLanguageChange?.(event.target.value)} aria-label="Change language">
+            {SUPPORTED_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.native}</option>)}
+          </select>
+        </label>}
 
         <div className="app-header__actions">
-          {step && <label className="app-header__language-picker" aria-label="Language">
+          {step && !isLanding && <label className="app-header__language-picker" aria-label="Language">
             <span aria-hidden="true">◎</span>
             <select value={language} onChange={(event) => onLanguageChange?.(event.target.value)} aria-label="Change language">
               {SUPPORTED_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.native}</option>)}
             </select>
           </label>}
-          {!step && !user && <div className="app-header__account-actions">
+          {(!step || isLanding) && !user && <div className="app-header__account-actions">
             <button type="button" className="app-header__login" onClick={() => onAccountAction?.('login')}>{uiText('Log in')}</button>
             <button type="button" className="app-header__signup" onClick={() => onAccountAction?.('signup')}>{uiText('Sign up')}</button>
           </div>}

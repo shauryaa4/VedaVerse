@@ -8,7 +8,7 @@
  * locally-running `uvicorn backend.main:app --reload --port 8000`.
  */
 
-const BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+const BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
 const AUTH_TOKEN_KEY = 'ip-sakti-auth-token';
 
 export function getAuthToken() { return localStorage.getItem(AUTH_TOKEN_KEY); }
@@ -16,20 +16,38 @@ export function saveAuthToken(token) { localStorage.setItem(AUTH_TOKEN_KEY, toke
 export function clearAuthToken() { localStorage.removeItem(AUTH_TOKEN_KEY); }
 
 async function request(path, options = {}) {
+  if (!BASE) {
+    throw new Error('Backend URL is not configured. Set VITE_API_BASE to the deployed API HTTPS URL in Vercel, then redeploy.');
+  }
   let res;
+  const { signal: externalSignal, headers: optionHeaders, ...fetchOptions } = options;
+  const isTranslationRequest = path.startsWith('/bhashini/');
+  const timeoutController = isTranslationRequest ? new AbortController() : null;
+  const timeoutId = timeoutController ? window.setTimeout(() => timeoutController.abort(), 25000) : null;
+  if (timeoutController && externalSignal) {
+    if (externalSignal.aborted) timeoutController.abort();
+    else externalSignal.addEventListener('abort', () => timeoutController.abort(), { once: true });
+  }
   try {
     res = await fetch(`${BASE}${path}`, {
+      ...fetchOptions,
       headers: {
         'Content-Type': 'application/json',
         ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
-        ...(options.headers || {}),
+        ...(optionHeaders || {}),
       },
-      ...options,
+      ...((timeoutController || externalSignal)
+        ? { signal: timeoutController ? timeoutController.signal : externalSignal }
+        : {}),
     });
   } catch (networkErr) {
     throw new Error(
-      `Could not reach the backend at ${BASE}${path}. Is uvicorn running? (${networkErr.message})`
+      networkErr.name === 'AbortError'
+        ? `Translation request timed out at ${BASE}${path}.`
+        : `Could not reach the backend at ${BASE}${path}. Is uvicorn running? (${networkErr.message})`
     );
+  } finally {
+    if (timeoutId !== null) window.clearTimeout(timeoutId);
   }
 
   if (!res.ok) {
@@ -199,11 +217,29 @@ export function translateText(text, targetLang, sourceLang = null) {
   });
 }
 
+/** POST /bhashini/transliterate -> phonetic rendering in target script */
+export function transliterateText(text, targetLang, sourceLang = 'en') {
+  return request('/bhashini/transliterate', {
+    method: 'POST',
+    body: JSON.stringify({ text, lang: targetLang, source_lang: sourceLang }),
+  });
+}
+
 /** POST /bhashini/translate_batch -> {translations: string[]} */
-export function translateBatch(texts, targetLang, sourceLang = 'en') {
+export function translateBatch(texts, targetLang, sourceLang = 'en', signal) {
   return request('/bhashini/translate_batch', {
     method: 'POST',
     body: JSON.stringify({ texts, target_lang: targetLang, source_lang: sourceLang }),
+    signal,
+  });
+}
+
+/** POST /bhashini/transliterate_batch -> {translations: string[]} */
+export function transliterateBatch(texts, targetLang, sourceLang = 'en', signal) {
+  return request('/bhashini/transliterate_batch', {
+    method: 'POST',
+    body: JSON.stringify({ texts, target_lang: targetLang, source_lang: sourceLang }),
+    signal,
   });
 }
 

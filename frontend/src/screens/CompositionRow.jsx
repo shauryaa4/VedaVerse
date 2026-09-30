@@ -1,4 +1,5 @@
-import { COMMON_INGREDIENTS } from '../data/options.js';
+import { COMMON_INGREDIENTS, QUANTITY_UNIT_OPTIONS } from '../data/options.js';
+import TKDL_INGREDIENTS from '../data/tkdl-ingredients.json';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 
 export default function CompositionRow({ row, onChange, onRemove, canRemove, currentLang = 'en' }) {
@@ -24,13 +25,16 @@ export default function CompositionRow({ row, onChange, onRemove, canRemove, cur
         value={row.quantity}
         onChange={(e) => update('quantity', e.target.value)}
       />
-      <input
-        type="text"
+      <select
         className="composition-row__unit"
-        placeholder={uiText('Unit (mg, %, ...)')}
         value={row.unit}
         onChange={(e) => update('unit', e.target.value)}
-      />
+        aria-label={uiText('Unit (mg, %, ...)')}
+      >
+        <option value="">{uiText('Unit (mg, %, ...)')}</option>
+        {!QUANTITY_UNIT_OPTIONS.some((unit) => unit.value === row.unit) && row.unit && <option value={row.unit}>{row.unit}</option>}
+        {QUANTITY_UNIT_OPTIONS.map((unit) => <option key={unit.value} value={unit.value}>{unit.label}</option>)}
+      </select>
       <label className="composition-row__active">
         <input
           type="checkbox"
@@ -56,7 +60,7 @@ export default function CompositionRow({ row, onChange, onRemove, canRemove, cur
 export function CommonIngredientsDatalist() {
   return (
     <datalist id="common-ingredients">
-      {COMMON_INGREDIENTS.map((name) => (
+      {[...new Set([...COMMON_INGREDIENTS, ...TKDL_INGREDIENTS])].map((name) => (
         <option key={name} value={name} />
       ))}
     </datalist>
