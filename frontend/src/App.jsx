@@ -11,6 +11,8 @@ import WorkspaceSidebar from './components/WorkspaceSidebar.jsx';
 import AccountDialog from './components/AccountDialog.jsx';
 import AccountDashboard from './screens/AccountDashboard.jsx';
 import DatasetExplorer from './screens/DatasetExplorer.jsx';
+import useDocumentTranslations from './utils/useDocumentTranslations.js';
+import { activateTranslationLanguage } from './utils/translator.js';
 import {
   createSession,
   submitIntake,
@@ -45,6 +47,11 @@ export default function App() {
     try { return localStorage.getItem('ip-sakti-ui-language') || 'en'; }
     catch (_) { return 'en'; }
   });
+  const handleLanguageChange = (language) => {
+    activateTranslationLanguage(language);
+    setSelectedLanguage(language);
+  };
+  useDocumentTranslations(selectedLanguage);
   const [translationWarning, setTranslationWarning] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState('query');
   const [accountDialog, setAccountDialog] = useState('');
@@ -362,9 +369,9 @@ export default function App() {
   };
 
   return (
-    <div className={`app-shell${step === 'dashboard' ? ' app-shell--dashboard' : ''}${step === 'library' ? ' app-shell--library' : ''}`}>
+    <div className={`app-shell${step === 'dashboard' ? ' app-shell--dashboard' : ''}${step === 'library' ? ' app-shell--library' : ''}${step === 'landing' ? ' app-shell--landing' : ''}`}>
       <AppHeader
-        step={step === 'landing' || step === 'library' ? null : step}
+        step={step === 'library' ? null : step}
         language={selectedLanguage}
         onRestart={accountUser ? () => { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); } : handleRestart}
         onAccountAction={(action) => { setAccountError(null); setAccountDialog(action); }}
@@ -372,7 +379,7 @@ export default function App() {
         showDashboard={Boolean(accountUser && ['jurisdiction', 'questionnaire', 'classification', 'workspace'].includes(step))}
         onDashboard={() => { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); }}
         onStepSelect={handleStepSelect}
-        onLanguageChange={setSelectedLanguage}
+        onLanguageChange={handleLanguageChange}
       />
 
       {translationWarning && (
@@ -388,7 +395,7 @@ export default function App() {
             loading={loading}
             error={error}
             currentLang={selectedLanguage}
-            onLanguageChange={setSelectedLanguage}
+            onLanguageChange={handleLanguageChange}
           />
         )}
 
@@ -425,7 +432,7 @@ export default function App() {
 
         {step === 'workspace' && (
           <>
-            <WorkspaceSidebar active={workspaceTab} signedIn={!!accountUser} user={accountUser} onDashboard={() => { if (accountUser) { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onHistory={() => { if (accountUser) { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={setSelectedLanguage} />
+            <WorkspaceSidebar active={workspaceTab} signedIn={!!accountUser} user={accountUser} onDashboard={() => { if (accountUser) { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onHistory={() => { if (accountUser) { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); } else { handleRestart(); } }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={handleLanguageChange} />
             {workspaceTab.startsWith('dataset-') ? <DatasetExplorer key={workspaceTab} dataset={workspaceTab.slice('dataset-'.length)} currentLang={selectedLanguage} onChangeDataset={(dataset) => setWorkspaceTab(`dataset-${dataset}`)} /> : <Workspace
               pip={pip}
               classification={classification}
@@ -450,13 +457,13 @@ export default function App() {
         )}
         {step === 'library' && (
           <>
-            <WorkspaceSidebar active="library" signedIn={!!accountUser} user={accountUser} onDashboard={() => { setDashboardView('dashboard'); setStep(accountUser ? 'dashboard' : 'landing'); if (accountUser) refreshSavedCases(); }} onHistory={() => { if (accountUser) { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); } }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={setSelectedLanguage} />
+            <WorkspaceSidebar active="library" signedIn={!!accountUser} user={accountUser} onDashboard={() => { setDashboardView('dashboard'); setStep(accountUser ? 'dashboard' : 'landing'); if (accountUser) refreshSavedCases(); }} onHistory={() => { if (accountUser) { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); } }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={handleLanguageChange} />
             <DatasetExplorer key={workspaceTab} dataset={workspaceTab.slice('dataset-'.length)} currentLang={selectedLanguage} onChangeDataset={(dataset) => setWorkspaceTab(`dataset-${dataset}`)} />
           </>
         )}
         {step === 'dashboard' && accountUser && (
           <>
-            <WorkspaceSidebar active={dashboardView} signedIn user={accountUser} onDashboard={() => { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); }} onHistory={() => { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={setSelectedLanguage} />
+            <WorkspaceSidebar active={dashboardView} signedIn user={accountUser} onDashboard={() => { setDashboardView('dashboard'); setStep('dashboard'); refreshSavedCases(); }} onHistory={() => { setDashboardView('history'); setStep('dashboard'); refreshSavedCases(); }} onLogout={handleLogout} language={selectedLanguage} onLanguageChange={handleLanguageChange} />
             <AccountDashboard user={accountUser} cases={savedCases} activeCase={activeCase} activity={activity} loading={casesLoading} startingCase={loading} error={casesError} currentLang={selectedLanguage} onOpenCase={handleOpenSavedCase} onNewCase={handleNewCase} onRefresh={refreshSavedCases} onShowHistory={() => { setDashboardView('history'); refreshSavedCases(); }} onBackDashboard={() => setDashboardView('dashboard')} view={dashboardView} onNavigate={(tab) => { setWorkspaceTab(tab); setStep('library'); }} />
           </>
         )}

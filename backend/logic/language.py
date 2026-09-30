@@ -188,6 +188,102 @@ def _translate(
     return translated.strip()
 
 
+def _batch_targets(data: object, task_name: str, expected: int) -> list[str]:
+    """Normalize Bhashini's output variants and reject malformed responses."""
+    if not isinstance(data, dict):
+        raise TranslationError(f"Bhashini {task_name} returned an invalid response format.")
+    pipeline_response = data.get("pipelineResponse")
+    first_task = pipeline_response[0] if isinstance(pipeline_response, list) and pipeline_response else None
+    output = first_task.get("output") if isinstance(first_task, dict) else None
+    if isinstance(output, dict):
+        output = [output]
+    if not isinstance(output, list) or len(output) != expected:
+        raise TranslationError(f"Bhashini {task_name} returned an incomplete result.")
+
+    def target_from(item: object) -> str:
+        if isinstance(item, str):
+            return item.strip()
+        if not isinstance(item, dict):
+            return ""
+        target = item.get("target") or item.get("text") or item.get("output")
+        if isinstance(target, list):
+            target = target[0] if target else ""
+        if isinstance(target, dict):
+            target = target.get("target") or target.get("text") or ""
+        return target.strip() if isinstance(target, str) else ""
+
+    results = [target_from(item) for item in output]
+    if any(not result for result in results):
+        raise TranslationError(f"Bhashini {task_name} returned an empty result.")
+    return results
+
+
+def translate_many_from_english(
+    texts: list[str], target_language: str, source_language: str = "en"
+) -> list[str]:
+    """Translate a small group of independent UI strings in one Bhashini call."""
+    source_language = _validate_language(source_language)
+    target_language = _validate_language(target_language)
+    if target_language == source_language:
+        return texts
+    clean_texts = [text if isinstance(text, str) else "" for text in texts]
+    if not clean_texts:
+        return []
+
+    payload = {
+        "pipelineTasks": [{
+            "taskType": "translation",
+            "config": {"language": {"sourceLanguage": source_language, "targetLanguage": target_language}},
+        }],
+        "inputData": {"input": [{"source": text} for text in clean_texts]},
+    }
+    try:
+        data = bhashini_compute(
+            payload,
+            task_type="translation",
+            source_language=source_language,
+            target_language=target_language,
+        )
+    except BhashiniError as exc:
+        raise TranslationError(str(exc)) from exc
+
+    return _batch_targets(data, "batch translation", len(clean_texts))
+
+
+def transliterate_from_english(text: str, target_language: str) -> str:
+    """Render an English UI term phonetically in the selected script."""
+    if not isinstance(text, str) or not text.strip():
+        return text
+    target_language = _validate_language(target_language)
+    if target_language == "en":
+        return text
+    return transliterate_many_from_english([text], target_language)[0]
+
+
+def transliterate_many_from_english(texts: list[str], target_language: str) -> list[str]:
+    """Transliterate a small group of technical UI terms in one Bhashini call."""
+    target_language = _validate_language(target_language)
+    if target_language == "en":
+        return texts
+    payload = {
+        "pipelineTasks": [{
+            "taskType": "transliteration",
+            "config": {"language": {"sourceLanguage": "en", "targetLanguage": target_language}},
+        }],
+        "inputData": {"input": [{"source": text} for text in texts]},
+    }
+    try:
+        data = bhashini_compute(
+            payload,
+            task_type="transliteration",
+            source_language="en",
+            target_language=target_language,
+        )
+    except BhashiniError as exc:
+        raise TranslationError(str(exc)) from exc
+    return _batch_targets(data, "batch transliteration", len(texts))
+
+
 def translate_to_english(
     text: str,
     source_language: str,

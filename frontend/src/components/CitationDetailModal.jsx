@@ -65,7 +65,7 @@ export default function CitationDetailModal({ label, loading, error, detail, onC
               <blockquote className="citation-modal__excerpt">{translatedExcerpt(detail.excerpt_text)}</blockquote>
               <p className="citation-modal__doc">{uiText('Original source text')}</p>
             </>}
-            <blockquote className="citation-modal__excerpt">{detail.excerpt_text}</blockquote>
+            <blockquote className="citation-modal__excerpt" data-translation-ignore>{detail.excerpt_text}</blockquote>
           </>
         )}
 

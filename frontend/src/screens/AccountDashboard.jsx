@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { deleteSavedCase, getSavedCaseDetails } from '../api/client.js';
+import { deleteSavedCase } from '../api/client.js';
 import './AccountDashboard.css';
 import useTranslatedTexts from '../utils/useTranslatedTexts.js';
 
@@ -111,37 +111,17 @@ export default function AccountDashboard({ user, cases, activeCase, activity, lo
 }
 
 function HistoryCase({ item, uiText, currentLang, onOpenCase, onDelete }) {
-  const [details, setDetails] = useState(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [detailError, setDetailError] = useState('');
-  const toggleDetails = async () => {
-    if (details) { setDetails(null); return; }
-    setLoadingDetails(true); setDetailError('');
-    try { setDetails(await getSavedCaseDetails(item.session_id)); }
-    catch (error) { setDetailError(error.message || 'Could not load case details.'); }
-    finally { setLoadingDetails(false); }
-  };
+  const [deleteError, setDeleteError] = useState('');
   const removeCase = async () => {
     if (!window.confirm('Delete this completed case and its saved question history? This cannot be undone.')) return;
     try { await deleteSavedCase(item.session_id); await onDelete?.(); }
-    catch (error) { setDetailError(error.message || 'Could not delete this case.'); }
+    catch (error) { setDeleteError(error.message || 'Could not delete this case.'); }
   };
-  const profile = details?.profile;
-  const product = profile?.product || {};
-  const field = (label, value) => value !== undefined && value !== null && value !== '' && <div className="account-dashboard__detail-row" key={label}><strong>{label}</strong><span>{Array.isArray(value) ? value.map((v) => typeof v === 'object' ? Object.entries(v).filter(([, x]) => x !== null && x !== '').map(([k, x]) => `${k.replaceAll('_', ' ')}: ${x}`).join(', ') : v).join(', ') : String(value)}</span></div>;
   return <article className="account-dashboard__case-card account-dashboard__history-item">
     <span className="account-dashboard__case-icon" aria-hidden="true">▤</span>
     <div className="account-dashboard__case-info"><h3>{item.product_name || uiText('Untitled product assessment')}</h3><p>{item.category ? item.category.replaceAll('_', ' ') : uiText('Classification pending')} · {uiText('Updated')} {dateLabel(item.updated_at, currentLang)}</p></div>
-    <button type="button" className="account-dashboard__open-case" onClick={toggleDetails}>{loadingDetails ? uiText('Loading your cases…') : details ? uiText('Hide details') : uiText('View details')}</button>
     <button type="button" className="account-dashboard__open-case" onClick={() => onOpenCase(item.session_id)}>{uiText('Open case')}&nbsp; →</button>
     <button type="button" className="account-dashboard__delete-case" onClick={removeCase}>{uiText('Delete')}</button>
-    {detailError && <p className="account-dashboard__error" role="alert">{detailError}</p>}
-    {details && <section className="account-dashboard__case-details">
-      <h4>{uiText('Product and case information')}</h4>
-      {field('Product name', product.name)}{field('Jurisdiction', profile.jurisdiction)}{field('Protection target', profile.protection_target)}{field('Composition', product.composition)}{field('Intended use', product.intended_use)}{field('Classical basis', product.classical_basis)}{field('Classical reference', product.classical_reference)}{field('Novelty', product.novelty)}{field('Ingredient sources', product.ingredient_sources)}{field('Biological origin known', product.biological_origin_known)}{field('Origin region', product.biological_origin_region)}{field('Development status', product.development_status)}{field('Objectives', profile.objective)}{field('Classification', profile.classification?.category)}{field('Confidence', profile.classification?.confidence)}{field('Classification reasons', profile.classification?.reasons)}
-      <h4>{uiText('Question and answer history')}</h4>
-      {details.queries?.length ? details.queries.map((query) => <div className="account-dashboard__query-detail" key={query.id}><strong>{query.question}</strong><p>{query.answer_text || uiText('No answer text was saved.')}</p><small>{dateLabel(query.timestamp, currentLang)}{query.abstained ? ` · ${uiText('Assistant abstained')}` : ''}</small></div>) : <p>{uiText('No questions have been asked in this case.')}</p>}
-      {details.assessments?.map((assessment) => <details key={assessment.type} className="account-dashboard__assessment-detail"><summary>{assessment.type.toUpperCase()} {uiText('assessment')}</summary><pre>{JSON.stringify(assessment.data, null, 2)}</pre></details>)}
-    </section>}
+    {deleteError && <p className="account-dashboard__error" role="alert">{deleteError}</p>}
   </article>;
 }

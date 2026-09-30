@@ -132,6 +132,18 @@
 .app-header__language-picker { display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 7px; color: var(--herb-dark); background: var(--surface); }
 .app-header__language-picker select { max-width: 118px; border: 0; outline: 0; color: inherit; background: transparent; font: 12px var(--font-sans); cursor: pointer; }
 
+.app-header--landing {
+  position: relative;
+  flex: 0 0 62px;
+  height: 62px;
+  padding: 0 22px;
+  border-bottom: 1px solid #edf0e8;
+}
+.app-header--landing .app-header__top { height: 100%; padding: 0; }
+.app-header__landing-language { display: inline-flex; align-items: center; gap: 12px; color: #76847a; font-size: 13px; }
+.app-header__landing-language select { min-width: 130px; border: 0; padding: 8px 5px; outline-color: #4e8a62; color: #33493b; background: transparent; font: 14px var(--font-sans); }
+.app-header--landing .app-header__actions { margin-left: auto; }
+
 
 .app-header__steps {
   display: flex;
@@ -206,4 +218,7 @@
   }
   .app-header__account-actions { gap: 6px; }
   .app-header__login, .app-header__signup { padding: 8px 10px; font-size: 12px; }
+  .app-header--landing { flex-basis: 58px; height: 58px; padding: 0 12px; }
+  .app-header__landing-language { gap: 5px; font-size: 11px; }
+  .app-header__landing-language select { min-width: 88px; max-width: 112px; font-size: 12px; }
 }

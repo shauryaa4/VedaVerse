@@ -7,8 +7,11 @@ from backend.logic.language import (
     TranslationError,
     _translate,
     detect_text_language,
+    transliterate_from_english,
     translate_from_english,
+    translate_many_from_english,
     translate_to_english,
+    transliterate_many_from_english,
 )
 from backend.logic.languages import UnsupportedLanguageError
 
@@ -75,6 +78,24 @@ def bhashini_translate(req: TranslateRequest):
         _raise_translation_error(exc)
 
 
+@router.post("/transliterate", response_model=TranslationResult)
+def bhashini_transliterate(req: TranslateRequest):
+    """Phonetically render English UI text in an Indian-language script."""
+    try:
+        source_lang = req.source_lang or "en"
+        if source_lang != "en":
+            raise UnsupportedLanguageError(source_lang)
+        transliterated = transliterate_from_english(req.text, req.lang)
+        return TranslationResult(
+            original_text=req.text,
+            translated_text=transliterated,
+            source_lang="en",
+            target_lang=req.lang,
+        )
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)
+
+
 @router.post("/translate_batch")
 def bhashini_translate_batch(req: BatchTranslateRequest):
     """
@@ -83,22 +104,47 @@ def bhashini_translate_batch(req: BatchTranslateRequest):
     if req.source_lang == req.target_lang or not req.texts:
         return {"translations": req.texts}
 
-    results = []
-    for text in req.texts:
-        if not text or not text.strip():
-            results.append(text)
-            continue
-        try:
-            trans = _translate(
-                text=text,
-                source_language=req.source_lang,
-                target_language=req.target_lang,
+    try:
+        # Keep requests small enough for Bhashini while avoiding one network
+        # round trip per UI text fragment. Empty strings stay in their slots.
+        results = list(req.texts)
+        for start in range(0, len(req.texts), 10):
+            chunk = req.texts[start : start + 10]
+            indexes = [i for i, text in enumerate(chunk) if text and text.strip()]
+            if not indexes:
+                continue
+            translated = translate_many_from_english(
+                [chunk[i] for i in indexes], req.target_lang, req.source_lang
             )
-            results.append(trans)
-        except (TranslationError, UnsupportedLanguageError) as exc:
-            _raise_translation_error(exc)
+            for i, value in zip(indexes, translated):
+                results[start + i] = value
+        return {"translations": results}
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)
 
-    return {"translations": results}
+
+@router.post("/transliterate_batch")
+def bhashini_transliterate_batch(req: BatchTranslateRequest):
+    """Phonetically render a group of English technical terms into one script."""
+    if req.source_lang != "en":
+        raise HTTPException(status_code=422, detail="Transliteration source language must be en.")
+    if req.target_lang == "en" or not req.texts:
+        return {"translations": req.texts}
+    try:
+        results = list(req.texts)
+        for start in range(0, len(req.texts), 10):
+            chunk = req.texts[start : start + 10]
+            indexes = [i for i, text in enumerate(chunk) if text and text.strip()]
+            if not indexes:
+                continue
+            rendered = transliterate_many_from_english(
+                [chunk[i] for i in indexes], req.target_lang
+            )
+            for i, value in zip(indexes, rendered):
+                results[start + i] = value
+        return {"translations": results}
+    except (TranslationError, UnsupportedLanguageError) as exc:
+        _raise_translation_error(exc)
 
 
 @router.post("/in", response_model=TranslationResult)

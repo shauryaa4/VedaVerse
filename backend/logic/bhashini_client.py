@@ -41,6 +41,8 @@ def _required_config_credentials() -> tuple[str, str]:
 def _static_service_id(task_type: str, source_language: str, target_language: str) -> str:
     if task_type == "translation":
         return TRANSLATION_SERVICE_ID
+    if task_type == "transliteration":
+        return "ai4bharat/indicxlit--cpu-fsv2"
     if task_type == "audio-lang-detection":
         return "bhashini/iitmandi/audio-lang-detection/gpu"
     if task_type == "asr":
