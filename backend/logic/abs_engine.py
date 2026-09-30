@@ -145,8 +145,15 @@ def build_fact_profile_from_pip(pip: ProductIntelligenceProfile) -> ABSFactProfi
             facts.resource.origin_status = "unknown"
             facts.resource.status = "AMBIGUOUS"
     elif p.biological_origin_known == "no":
-        facts.resource.origin_status = "unknown"
-        facts.resource.status = "UNKNOWN"
+        # In the product questionnaire, "no" means the user does not know
+        # the origin. Preserve an explicit, confirmed answer supplied later
+        # through the ABS-specific form instead of resetting it to unknown.
+        if not (
+            facts.resource.origin_status in ("india", "foreign")
+            and facts.resource.status == "KNOWN"
+        ):
+            facts.resource.origin_status = "unknown"
+            facts.resource.status = "UNKNOWN"
 
     # Traditional knowledge mapping: distinguish classical_basis (codified) from associated_traditional_knowledge (community TK)
     if p.classical_basis == "yes":

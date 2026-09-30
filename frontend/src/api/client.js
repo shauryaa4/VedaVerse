@@ -173,10 +173,10 @@ export function tkdlSearch(sessionId) {
 }
 
 /** POST /abs/assess -> ABSAssessment */
-export function absAssess(sessionId) {
+export function absAssess(sessionId, absFacts = null) {
   return request('/abs/assess', {
     method: 'POST',
-    body: JSON.stringify({ session_id: sessionId }),
+    body: JSON.stringify({ session_id: sessionId, ...(absFacts ? { abs_facts: absFacts } : {}) }),
   });
 }
 
