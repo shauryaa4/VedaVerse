@@ -657,14 +657,13 @@ def answer_query(
     except GeminiAPIError as exc:
         provider_status = getattr(exc, "code", None)
 
-        if provider_status != 429:
+        if provider_status not in (429, 503):
             raise
 
         print(
-            "[query] Gemini rate limit reached; "
+            f"[query] Gemini provider returned {provider_status}; "
             "falling back to OpenRouter."
         )
-
         answer_text = _generate_with_openrouter(prompt)
 
     # ------------------------------------------------------------------
