@@ -1,4 +1,6 @@
 from fastapi.testclient import TestClient
+from google.genai.errors import APIError as GeminiAPIError
+import httpx
 
 from backend.main import app
 from backend.services.citation_cache import (
@@ -385,3 +387,67 @@ def test_query_translates_hindi_question_and_answer(monkeypatch):
     assert response.json()["answer_text"] == (
         "पारंपरिक ज्ञान को पेटेंट नहीं किया जा सकता [IN-1:3(p)]।"
     )
+
+
+def test_gemini_quota_error_returns_cors_readable_service_error(monkeypatch):
+    from backend.routes import query as query_route
+
+    pip = ProductIntelligenceProfile(
+        jurisdiction="india",
+        objective=["patentability"],
+        product={
+            "classical_basis": "yes",
+            "intended_use": "therapeutic",
+            "novelty": "existing",
+        },
+    )
+
+    def raise_quota_error(*args, **kwargs):
+        raise GeminiAPIError(
+            429,
+            {"error": {"code": 429, "message": "quota exhausted"}},
+        )
+
+    monkeypatch.setattr(query_route, "_get_collection", lambda: None)
+    monkeypatch.setattr(query_route, "answer_query", raise_quota_error)
+
+    response = client.post(
+        "/query",
+        headers={"Origin": "http://localhost:5173"},
+        json={
+            "pip": pip.model_dump(mode="json"),
+            "question": "What legal pathway should I consider?",
+        },
+    )
+
+    assert response.status_code == 503
+    assert "Gemini API quota" in response.json()["detail"]
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_gemini_connection_error_returns_cors_readable_service_error(monkeypatch):
+    from backend.routes import query as query_route
+
+    pip = ProductIntelligenceProfile(
+        jurisdiction="india",
+        objective=["patentability"],
+    )
+
+    def raise_connection_error(*args, **kwargs):
+        raise httpx.ConnectError("provider connection refused")
+
+    monkeypatch.setattr(query_route, "_get_collection", lambda: None)
+    monkeypatch.setattr(query_route, "answer_query", raise_connection_error)
+
+    response = client.post(
+        "/query",
+        headers={"Origin": "http://localhost:5173"},
+        json={
+            "pip": pip.model_dump(mode="json"),
+            "question": "What legal pathway should I consider?",
+        },
+    )
+
+    assert response.status_code == 503
+    assert "could not connect" in response.json()["detail"]
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
