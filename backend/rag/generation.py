@@ -9,6 +9,7 @@ downstream should ever touch a raw LLM response or a raw Chroma result,
 only this shape.
 
 LLM: Google Gemini (google-genai SDK).
+Fallback LLM: OpenRouter (OpenAI-compatible API).
 
 Language architecture:
 - The query route owns Bhashini input/output translation.
@@ -22,8 +23,10 @@ import os
 from pathlib import Path
 from typing import Literal, Optional
 
+import httpx
 from dotenv import dotenv_values, load_dotenv
 from google import genai
+from google.genai.errors import APIError as GeminiAPIError
 from pydantic import BaseModel, Field
 
 from backend.logic.classification import apply_classification_to_pip
@@ -35,7 +38,7 @@ from backend.services.vector_store import query as vector_query
 
 
 # ----------------------------------------------------------------------
-# Environment / Gemini configuration
+# Environment / Gemini / OpenRouter configuration
 # ----------------------------------------------------------------------
 
 # Resolve the local .env from the repository root regardless of the process
@@ -45,6 +48,11 @@ _REPO_ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(_REPO_ENV_PATH)
 
 _GEMINI_MODEL = "gemini-3.6-flash"
+
+# OpenRouter provides an OpenAI-compatible API. The free router chooses from
+# currently available free models.
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+_OPENROUTER_MODEL = "openrouter/free"
 
 _client: Optional["genai.Client"] = None
 
@@ -64,8 +72,11 @@ def _get_client() -> "genai.Client":
         # The file is read here as well as at import time because developers
         # often add the key while the API server is already running.
         api_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
+
         if not api_key:
-            api_key = (dotenv_values(_REPO_ENV_PATH).get("GEMINI_API_KEY") or "").strip()
+            api_key = (
+                dotenv_values(_REPO_ENV_PATH).get("GEMINI_API_KEY") or ""
+            ).strip()
 
         if not api_key:
             raise RuntimeError(
@@ -77,6 +88,71 @@ def _get_client() -> "genai.Client":
         _client = genai.Client(api_key=api_key)
 
     return _client
+
+
+def _generate_with_openrouter(prompt: str) -> str:
+    """
+    Generate an answer through OpenRouter.
+
+    This is used only as a fallback when Gemini returns HTTP 429
+    (rate limit / quota exhaustion).
+
+    The same legal/RAG prompt produced for Gemini is sent to OpenRouter,
+    so the retrieval and legal grounding pipeline remains unchanged.
+    """
+
+    api_key = (os.environ.get("OPENROUTER_API_KEY") or "").strip()
+
+    if not api_key:
+        # Also support the local repository .env for development.
+        api_key = (
+            dotenv_values(_REPO_ENV_PATH).get("OPENROUTER_API_KEY") or ""
+        ).strip()
+
+    if not api_key:
+        raise RuntimeError(
+            "OpenRouter fallback is not configured. "
+            "Set OPENROUTER_API_KEY in the backend environment."
+        )
+
+    response = httpx.post(
+        _OPENROUTER_URL,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": _OPENROUTER_MODEL,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+        },
+        timeout=60.0,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    answer = (
+        data.get("choices", [{}])[0]
+        .get("message", {})
+        .get("content", "")
+    )
+
+    if not answer:
+        raise RuntimeError(
+            "OpenRouter returned an empty answer."
+        )
+
+    print(
+        "[query] OpenRouter fallback generated the legal answer."
+    )
+
+    return answer
 
 
 # ----------------------------------------------------------------------
@@ -486,25 +562,25 @@ def answer_query(
 
     if routing is None:
         return RagResponse(
-        original_text=original_text,
-        detected_language=detected_language,
-        normalized_text=question,
-        translation_status=translation_status,
-        answer_text="",
-        used_chunks=[],
-        retrieval_where_clause=None,
-        abstained=True,
-        abstain_reason=(
-            "Jurisdiction is required before legal routing can be performed."
-        ),
-        status_notes=[
-            "Legal reasoning was not performed because jurisdiction is unknown."
-        ],
-        confidence="abstain",
-        confidence_reason="Jurisdiction is missing.",
-        confidence_score=0.0,
-        confidence_breakdown=[],
-    )
+            original_text=original_text,
+            detected_language=detected_language,
+            normalized_text=question,
+            translation_status=translation_status,
+            answer_text="",
+            used_chunks=[],
+            retrieval_where_clause=None,
+            abstained=True,
+            abstain_reason=(
+                "Jurisdiction is required before legal routing can be performed."
+            ),
+            status_notes=[
+                "Legal reasoning was not performed because jurisdiction is unknown."
+            ],
+            confidence="abstain",
+            confidence_reason="Jurisdiction is missing.",
+            confidence_score=0.0,
+            confidence_breakdown=[],
+        )
 
     # ------------------------------------------------------------------
     # Retrieval filter
@@ -570,12 +646,26 @@ def answer_query(
 
     client = _get_client()
 
-    response = client.models.generate_content(
-        model=_GEMINI_MODEL,
-        contents=prompt,
-    )
+    try:
+        response = client.models.generate_content(
+            model=_GEMINI_MODEL,
+            contents=prompt,
+        )
 
-    answer_text = response.text or ""
+        answer_text = response.text or ""
+
+    except GeminiAPIError as exc:
+        provider_status = getattr(exc, "code", None)
+
+        if provider_status != 429:
+            raise
+
+        print(
+            "[query] Gemini rate limit reached; "
+            "falling back to OpenRouter."
+        )
+
+        answer_text = _generate_with_openrouter(prompt)
 
     # ------------------------------------------------------------------
     # Final RagResponse
