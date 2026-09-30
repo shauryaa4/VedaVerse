@@ -64,6 +64,7 @@ export default function Workspace({
       {tab === 'abs' && (
         <ABSHelper
           state={abs}
+          pip={pip}
           onFetch={onFetchAbs}
           onRestart={onRestart}
           currentLang={currentLang}

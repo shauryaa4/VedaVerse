@@ -333,10 +333,10 @@ export default function App() {
     }
   };
 
-  const handleFetchAbs = async () => {
+  const handleFetchAbs = async (absFacts = null) => {
     setAbs((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const data = await absAssess(pip.session_id);
+      const data = await absAssess(pip.session_id, absFacts);
       setAbs({ data, loading: false, error: null, fetched: true });
     } catch (err) {
       setAbs({ data: null, loading: false, error: asErrorState(err), fetched: true });

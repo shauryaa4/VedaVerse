@@ -11,6 +11,7 @@ These tests verify:
 
 from backend.logic.abs_helper import assess_abs
 from backend.logic.abs_engine import build_fact_profile_from_pip
+from backend.models.abs_models import ABSFactProfile
 from backend.models.pip import ProductIntelligenceProfile, Product
 
 
@@ -42,6 +43,19 @@ def test_biological_origin_unknown_is_possible():
     )
 
     assert result.relevance == "possible"
+
+
+def test_abs_specific_origin_answer_is_preserved_when_questionnaire_origin_was_unknown():
+    pip = _pip(ingredient_sources=["plant"], biological_origin_known="no")
+    pip.abs_facts = ABSFactProfile()
+    pip.abs_facts.resource.origin_status = "india"
+    pip.abs_facts.resource.country_of_origin = "India"
+    pip.abs_facts.resource.status = "KNOWN"
+
+    facts = build_fact_profile_from_pip(pip)
+
+    assert facts.resource.origin_status == "india"
+    assert facts.resource.status == "KNOWN"
 
 
 def test_india_origin_is_likely():
